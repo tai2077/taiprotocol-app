@@ -1,0 +1,27 @@
+{
+  "id": "/",
+  "name": "TAI Protocol",
+  "short_name": "TAI",
+  "description": "TAI Protocol mobile app for deposits, missions, rewards and invites.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#08130e",
+  "theme_color": "#08130e",
+  "orientation": "portrait",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
