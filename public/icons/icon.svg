@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="TAI Protocol">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#08130e"/>
+      <stop offset="100%" stop-color="#10261d"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0df280"/>
+      <stop offset="100%" stop-color="#2f6dff"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="120" fill="url(#bg)"/>
+  <circle cx="128" cy="128" r="88" fill="#0df280" fill-opacity="0.12"/>
+  <circle cx="394" cy="384" r="96" fill="#2f6dff" fill-opacity="0.16"/>
+  <path d="M102 160h308v38H272v156h-34V198H102v-38z" fill="url(#accent)"/>
+  <path d="M168 360h176v30H168z" fill="#0df280"/>
+  <text x="256" y="445" text-anchor="middle" fill="#d7ffe9" font-size="52" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" letter-spacing="4">TAI</text>
+</svg>
