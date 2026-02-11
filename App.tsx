@@ -6,6 +6,9 @@ import NavBar from './components/NavBar';
 import TopBar from './components/TopBar';
 import PwaInstallPrompt from './components/PwaInstallPrompt';
 import { api } from './lib/api';
+import { isTelegramInApp } from './lib/config';
+import { toTaiNumber } from './lib/format';
+import { safeGetStorage, safeSetStorage } from './lib/storage';
 import { DepositGoal, UserStats } from './types';
 
 const Dashboard = lazy(() => import('./screens/Dashboard'));
@@ -30,22 +33,6 @@ const INITIAL_STATS: UserStats = {
 
 const GOALS_STORAGE_PREFIX = 'tai:deposit-goals:v1:';
 const LOCALE_STORAGE_KEY = 'tai:locale:v1';
-
-function safeGetStorage(key: string): string | null {
-  try {
-    return window.localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
-function safeSetStorage(key: string, value: string): void {
-  try {
-    window.localStorage.setItem(key, value);
-  } catch {
-    // ignore storage write errors in restricted environments
-  }
-}
 
 function sanitizeGoal(input: any): DepositGoal | null {
   if (!input || typeof input !== 'object') return null;
@@ -83,14 +70,6 @@ function nanoToNumber(value: string, decimals = 9): number {
   }
 }
 
-function parseTaiString(value: unknown): number {
-  const text = String(value ?? '0').trim();
-  if (!text) return 0;
-  const normalized = text.replace(/,/g, '');
-  const numeric = Number(normalized);
-  return Number.isFinite(numeric) ? numeric : 0;
-}
-
 function toFriendlyAddress(address: string | null): string | null {
   if (!address) return null;
   try {
@@ -112,6 +91,7 @@ const App: React.FC = () => {
     const saved = safeGetStorage(LOCALE_STORAGE_KEY);
     return saved === 'en' ? 'en' : 'zh';
   });
+  const [navMode, setNavMode] = useState<'bottom' | 'top-right'>(() => (isTelegramInApp() ? 'bottom' : 'top-right'));
 
   const rawWalletAddress = wallet?.account.address || rawAddressFromHook;
   const friendlyWalletAddress = friendlyAddressFromHook || toFriendlyAddress(rawWalletAddress);
@@ -125,6 +105,20 @@ const App: React.FC = () => {
     safeSetStorage(LOCALE_STORAGE_KEY, locale);
     document.documentElement.lang = locale === 'zh' ? 'zh-CN' : 'en-US';
   }, [locale]);
+
+  useEffect(() => {
+    const syncNavMode = () => {
+      setNavMode(isTelegramInApp() ? 'bottom' : 'top-right');
+    };
+
+    syncNavMode();
+    window.addEventListener('focus', syncNavMode);
+    window.addEventListener('pageshow', syncNavMode as EventListener);
+    return () => {
+      window.removeEventListener('focus', syncNavMode);
+      window.removeEventListener('pageshow', syncNavMode as EventListener);
+    };
+  }, []);
 
   useEffect(() => {
     if (!walletAddress || addressCandidates.length === 0) {
@@ -158,13 +152,9 @@ const App: React.FC = () => {
       const claimable = claimableResult.status === 'fulfilled' ? claimableResult.value : null;
       const tonBalance = tonBalanceResult.status === 'fulfilled' ? tonBalanceResult.value : 0;
 
-      const taiBalance = parseTaiString(portfolio?.walletBalance || 0);
-      const pendingByPortfolio = parseTaiString(portfolio?.totalPending || 0);
-      const pendingByClaimable = claimable
-        ? claimable.source === 'sale-v2'
-          ? nanoToNumber(claimable.pendingTotalTai, 9)
-          : parseTaiString(claimable.pendingTotalTai)
-        : 0;
+      const taiBalance = toTaiNumber(portfolio?.walletBalance || 0);
+      const pendingByPortfolio = toTaiNumber(portfolio?.totalPending || 0);
+      const pendingByClaimable = claimable ? toTaiNumber(claimable.pendingTotalTai) : 0;
       const pendingTai = pendingByClaimable > 0 ? pendingByClaimable : pendingByPortfolio;
 
       setStats((prev) => ({
@@ -412,15 +402,23 @@ const App: React.FC = () => {
   }, [locale, routeTitle]);
 
   return (
-    <div className="min-h-screen app-atmosphere flex justify-center px-2 sm:px-3">
-      <div className="app-shell-frame w-full max-w-[430px] min-h-screen flex flex-col relative overflow-hidden">
+    <div className="min-h-screen app-atmosphere flex justify-center px-3 sm:px-5">
+      <div className={`app-shell-frame w-full max-w-[520px] min-h-screen flex flex-col relative overflow-hidden ${navMode === 'top-right' ? 'nav-mode-top-right' : ''}`}>
         <div className="pointer-events-none absolute inset-0 -z-10">
           <div className="absolute -top-24 -left-24 h-64 w-64 rounded-full bg-primary/20 blur-[90px]" />
           <div className="absolute top-1/4 -right-24 h-64 w-64 rounded-full bg-accent/20 blur-[95px]" />
           <div className="absolute inset-x-0 bottom-[-140px] mx-auto h-60 w-[120%] rounded-full bg-primary/10 blur-[110px]" />
           <div className="app-shell-noise" />
         </div>
-        {showNav && <TopBar title={routeTitle} walletAddress={walletAddress} locale={locale} onToggleLocale={() => setLocale((prev) => (prev === 'zh' ? 'en' : 'zh'))} />}
+        {showNav && (
+          <TopBar
+            title={routeTitle}
+            walletAddress={walletAddress}
+            locale={locale}
+            onToggleLocale={() => setLocale((prev) => (prev === 'zh' ? 'en' : 'zh'))}
+            navMode={navMode}
+          />
+        )}
         <Suspense
           fallback={
             <div className="flex-1 flex items-center justify-center p-6">
@@ -456,7 +454,7 @@ const App: React.FC = () => {
           </Routes>
         </Suspense>
         {showNav && <PwaInstallPrompt locale={locale} />}
-        {showNav && <NavBar locale={locale} />}
+        {showNav && navMode === 'bottom' && <NavBar locale={locale} />}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { DepositGoal, UserStats } from '../types';
-import { AppLocale, formatTai } from '../lib/format';
+import { AppLocale, formatTai, toTaiNumber } from '../lib/format';
 import { api } from '../lib/api';
 
 interface MissionsProps {
@@ -17,26 +17,6 @@ interface MissionItem {
   description: string;
   done: boolean;
   impact: string;
-}
-
-function toTai(value: string | number): number {
-  const text = String(value ?? '0');
-  if (text.includes('.')) {
-    const decimal = Number(text);
-    return Number.isFinite(decimal) ? decimal : 0;
-  }
-  if (/^\d+$/.test(text) && text.length >= 10) {
-    try {
-      const nano = BigInt(text);
-      const whole = Number(nano / 1_000_000_000n);
-      const fraction = Number(nano % 1_000_000_000n) / 1_000_000_000;
-      return whole + fraction;
-    } catch {
-      return 0;
-    }
-  }
-  const numeric = Number(text);
-  return Number.isFinite(numeric) ? numeric : 0;
 }
 
 const Missions: React.FC<MissionsProps> = ({ goals, walletAddress, locale }) => {
@@ -85,8 +65,8 @@ const Missions: React.FC<MissionsProps> = ({ goals, walletAddress, locale }) => 
   }, [walletAddress]);
 
   const totalPurchases = purchaseCounts.tier1 + purchaseCounts.tier2 + purchaseCounts.tier3;
-  const unlockedTai = toTai(claimable?.unlockedTai || 0);
-  const pendingTai = toTai(claimable?.pendingTotalTai || 0);
+  const unlockedTai = toTaiNumber(claimable?.unlockedTai || 0);
+  const pendingTai = toTaiNumber(claimable?.pendingTotalTai || 0);
   const taskSaveRatio = claimable?.ratios?.taskSaveRatioBp || 0;
 
   const missions = useMemo<MissionItem[]>(
@@ -141,8 +121,8 @@ const Missions: React.FC<MissionsProps> = ({ goals, walletAddress, locale }) => 
   const completion = missions.length > 0 ? Math.round((doneCount / missions.length) * 100) : 0;
 
   return (
-    <div className="flex-1 flex flex-col safe-content-bottom p-4 gap-4 animate-in fade-in duration-300 grid-background">
-      <div className="neo-card-dark p-5 relative overflow-hidden">
+    <div className="page-view">
+      <div className="neo-card-dark p-6 relative overflow-hidden">
         <div className="pointer-events-none absolute -top-12 -right-10 h-44 w-44 rounded-full bg-primary/18 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-14 -left-8 h-40 w-40 rounded-full bg-accent/20 blur-3xl" />
 

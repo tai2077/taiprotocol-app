@@ -19,6 +19,27 @@ export function formatTai(value: number, locale: AppLocale, maximumFractionDigit
   return `${safe.toLocaleString(localeTag(locale), { maximumFractionDigits })} TAI`;
 }
 
+export function toTaiNumber(value: unknown): number {
+  const text = String(value ?? '0').trim();
+  if (!text) return 0;
+  if (text.includes('.')) {
+    const decimal = Number(text.replace(/,/g, ''));
+    return Number.isFinite(decimal) ? decimal : 0;
+  }
+  if (/^\d+$/.test(text) && text.length >= 10) {
+    try {
+      const nano = BigInt(text);
+      const whole = Number(nano / 1_000_000_000n);
+      const fraction = Number(nano % 1_000_000_000n) / 1_000_000_000;
+      return whole + fraction;
+    } catch {
+      return 0;
+    }
+  }
+  const numeric = Number(text.replace(/,/g, ''));
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
 export function shortAddress(address: string | null | undefined, head = 6, tail = 4): string {
   const value = String(address || '').trim();
   if (!value) return '';

@@ -30,6 +30,8 @@ export default defineConfig({
         manualChunks: {
           react: ['react', 'react-dom', 'react-router-dom'],
           tonconnect: ['@tonconnect/ui-react'],
+          toncore: ['@ton/core'],
+          polyfills: ['buffer'],
         },
       },
     },

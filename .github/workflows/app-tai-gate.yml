@@ -1,0 +1,37 @@
+name: app-tai-gate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  quality-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run offline quality gate
+        run: npm run ci:offline
+
+      - name: Optional online smoke on push
+        if: ${{ github.event_name == 'push' && vars.APP_TAI_RUN_ONLINE_SMOKE == 'true' && vars.APP_TAI_API_BASE != '' }}
+        env:
+          APP_TAI_API_BASE: ${{ vars.APP_TAI_API_BASE }}
+        run: |
+          printf "VITE_API_BASE=%s\n" "${APP_TAI_API_BASE}" > .env.local
+          npm run smoke

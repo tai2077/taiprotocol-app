@@ -3,6 +3,7 @@ import { API_BASE, telegramInitData } from './config';
 const REQUEST_TIMEOUT_MS = Number(import.meta.env.VITE_API_TIMEOUT_MS || 10000);
 const RETRIES = 1;
 const NANO_PER_TAI = 1_000_000_000n;
+const MINI_APP_INVITE_BASE = 'https://mini.tai.lat/sale';
 
 type AnyObject = Record<string, any>;
 
@@ -262,6 +263,21 @@ function nanoToTai(value: unknown): string {
   }
 }
 
+function extractInviteCodeFromLink(link: string): string {
+  const text = String(link || '').trim();
+  if (!text) return '';
+  const refMatch =
+    text.match(/[?&]ref=([A-Za-z0-9_-]+)/i)?.[1] ||
+    text.match(/[?&]startapp=ref_([A-Za-z0-9_-]+)/i)?.[1] ||
+    text.match(/[?&]start=ref_([A-Za-z0-9_-]+)/i)?.[1];
+  return (refMatch || '').toUpperCase();
+}
+
+function buildMiniInviteLink(code: string): string {
+  const ref = String(code || '').trim().toUpperCase();
+  return ref ? `${MINI_APP_INVITE_BASE}?ref=${ref}` : MINI_APP_INVITE_BASE;
+}
+
 function normalizeInviteStatsResponse(rawResponse: unknown, walletAddress: string): InviteStatsResponse {
   const root = toObject(rawResponse);
   const raw = toObject(root.stats || root.data || root);
@@ -276,8 +292,11 @@ function normalizeInviteStatsResponse(rawResponse: unknown, walletAddress: strin
       : nanoToTai(raw.totalEarned ?? raw.total_rewards ?? raw.totalRewards ?? 0);
 
   const fallbackCode = inviteCode || walletAddress.slice(0, 8).toUpperCase();
-  const inviteLink =
-    String(raw.inviteLink || '').trim() || `https://t.me/taitoken_bot?startapp=ref_${fallbackCode}`;
+  const rawInviteLink = String(raw.inviteLink || '').trim();
+  const inviteCodeFromLink = extractInviteCodeFromLink(rawInviteLink);
+  const inviteLink = inviteCodeFromLink
+    ? buildMiniInviteLink(inviteCodeFromLink)
+    : rawInviteLink || buildMiniInviteLink(fallbackCode);
 
   return {
     inviteCode,
@@ -430,7 +449,7 @@ export const api = {
         requestJson<any>(`/api/referral/stats/${address}`).then(async (data) => {
           const normalized = normalizeInviteStatsResponse(data, address);
           const code = await ensureReferralCode(address, normalized.inviteCode);
-          const inviteLink = code ? `https://t.me/taitoken_bot?startapp=ref_${code}` : normalized.inviteLink;
+          const inviteLink = code ? buildMiniInviteLink(code) : normalized.inviteLink;
           return { ...normalized, inviteCode: code, inviteLink };
         }),
     ]),

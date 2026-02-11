@@ -236,8 +236,8 @@ const Vault: React.FC<VaultProps> = ({ goals, availableTai, onCreateGoal, onTopU
   };
 
   return (
-    <div className="flex-1 flex flex-col safe-content-bottom p-4 gap-4 animate-in fade-in duration-300 grid-background">
-      <div className="neo-card-dark p-5 relative overflow-hidden">
+    <div className="page-view">
+      <div className="neo-card-dark p-6 relative overflow-hidden">
         <div className="pointer-events-none absolute -top-10 -right-10 h-36 w-36 rounded-full bg-primary/20 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-14 -left-8 h-32 w-32 rounded-full bg-accent/18 blur-3xl" />
         <div className="flex items-start justify-between gap-3">

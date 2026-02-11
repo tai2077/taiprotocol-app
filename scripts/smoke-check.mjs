@@ -78,10 +78,7 @@ function collectUrls(manifest) {
 
 async function main() {
   const envPath = path.join(cwd, '.env.local');
-  assert(fs.existsSync(envPath), '.env.local missing');
-
-  const env = parseEnv(fs.readFileSync(envPath, 'utf8'));
-  assert(Boolean(env.VITE_API_BASE), 'VITE_API_BASE missing in .env.local');
+  const env = fs.existsSync(envPath) ? parseEnv(fs.readFileSync(envPath, 'utf8')) : {};
 
   const manifestPath = path.join(cwd, 'public', 'tonconnect-manifest.json');
   assert(fs.existsSync(manifestPath), 'public/tonconnect-manifest.json missing');
@@ -105,6 +102,9 @@ async function main() {
   }
 
   if (!skipApi) {
+    assert(fs.existsSync(envPath), '.env.local missing');
+    assert(Boolean(env.VITE_API_BASE), 'VITE_API_BASE missing in .env.local');
+
     const base = normalizeBase(env.VITE_API_BASE);
     const baseCandidates = Array.from(
       new Set([

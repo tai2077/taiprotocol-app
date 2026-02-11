@@ -12,3 +12,11 @@ export const DEPOSIT_GOAL_VAULT = import.meta.env.VITE_DEPOSIT_GOAL_VAULT_ADDRES
 export function telegramInitData(): string {
   return window.Telegram?.WebApp?.initData || '';
 }
+
+export function isTelegramInApp(): boolean {
+  const initData = telegramInitData().trim();
+  if (initData.length > 0) return true;
+
+  const search = window.location.search || '';
+  return /(?:^|[?&])tgWebAppData=/.test(search) || /(?:^|[?&])tgWebAppPlatform=/.test(search);
+}

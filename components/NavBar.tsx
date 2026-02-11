@@ -56,15 +56,15 @@ const NavBar: React.FC<{ locale: 'zh' | 'en' }> = ({ locale }) => {
   ];
 
   return (
-    <div className="fixed safe-nav-bottom left-1/2 -translate-x-1/2 w-[95%] max-w-[430px] z-50">
-      <div className="bg-bg-dark/86 backdrop-blur-2xl border border-white/15 rounded-[1.65rem] p-2.5 flex justify-around items-center shadow-brutal-xl pulse-border">
+    <div className="fixed safe-nav-bottom left-1/2 -translate-x-1/2 w-[94%] max-w-[520px] z-50">
+      <div className="bg-bg-dark/84 backdrop-blur-2xl border border-white/15 rounded-[1.6rem] p-2.5 flex justify-around items-center shadow-brutal-xl pulse-border">
         {items.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
-              `relative flex flex-col items-center justify-center gap-1 transition-all px-3 py-2 min-w-11 min-h-11 rounded-xl ${
-                isActive ? 'text-bg-dark bg-primary brutal-border-thin border-primary/50 shadow-brutal-active' : 'text-white/68 hover:text-white'
+              `relative flex flex-col items-center justify-center gap-1 transition-all px-3 py-2.5 min-w-12 min-h-11 rounded-xl ${
+                isActive ? 'text-bg-dark bg-primary brutal-border-thin border-primary/55 shadow-brutal-active' : 'text-white/68 hover:text-white'
               }`
             }
           >

@@ -56,8 +56,8 @@ const Achievements: React.FC<AchievementsProps> = ({ locale }) => {
   const progress = Math.round((unlockedCount / achievements.length) * 100);
 
   return (
-    <div className="flex-1 flex flex-col safe-content-bottom p-4 gap-4 animate-in fade-in duration-300 grid-background">
-      <div className="neo-card-dark p-5 relative overflow-hidden">
+    <div className="page-view">
+      <div className="neo-card-dark p-6 relative overflow-hidden">
         <div className="pointer-events-none absolute -top-12 -right-10 h-44 w-44 rounded-full bg-primary/18 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-16 -left-8 h-40 w-40 rounded-full bg-accent/18 blur-3xl" />
 

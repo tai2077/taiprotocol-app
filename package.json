@@ -12,7 +12,11 @@
     "test": "vitest run",
     "smoke": "node scripts/smoke-check.mjs",
     "smoke:offline": "node scripts/smoke-check.mjs --skip-api",
-    "release:check": "npm run typecheck && npm run build && npm run smoke"
+    "bundle:check": "node scripts/check-bundle.mjs",
+    "standards:check": "node scripts/check-standards.mjs",
+    "ci:offline": "npm run typecheck && npm run test && npm run build && npm run bundle:check && npm run standards:check && npm run smoke:offline",
+    "ci:online": "npm run ci:offline && npm run smoke",
+    "release:check": "npm run ci:online"
   },
   "dependencies": {
     "@ton/core": "^0.61.0",

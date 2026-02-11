@@ -6,6 +6,7 @@ import { SALE_CONTRACT } from '../lib/config';
 import { buildTextPayload } from '../lib/tx';
 import { useToast } from '../components/ToastProvider';
 import { AppLocale, formatTai } from '../lib/format';
+import { safeGetStorage, safeSetStorage } from '../lib/storage';
 import { pollUntil } from '../lib/txConfirm';
 import { getTonProofPayload, serializeTonProofHeader, setupTonProofConnectRequest } from '../lib/tonProof';
 
@@ -86,22 +87,6 @@ const PACKAGES: SalePackage[] = [
 interface ShopProps {
   walletAddress: string | null;
   locale: AppLocale;
-}
-
-function safeGetStorage(key: string): string | null {
-  try {
-    return window.localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
-function safeSetStorage(key: string, value: string): void {
-  try {
-    window.localStorage.setItem(key, value);
-  } catch {
-    // ignore storage errors
-  }
 }
 
 const Shop: React.FC<ShopProps> = ({ walletAddress, locale }) => {
@@ -402,11 +387,11 @@ const Shop: React.FC<ShopProps> = ({ walletAddress, locale }) => {
   };
 
   const selectedRemaining = getRemaining(pkg.tier);
-  const canBuy = !!walletAddress && !buying && selectedRemaining > 0;
+  const canBuy = !buying && (!walletAddress || selectedRemaining > 0);
 
   return (
-    <div className="flex-1 flex flex-col safe-content-bottom p-4 gap-4 animate-in fade-in duration-300 grid-background">
-      <div className="neo-card-dark p-5 relative overflow-hidden scanline">
+    <div className="page-view">
+      <div className="neo-card-dark p-6 relative overflow-hidden scanline">
         <div className="pointer-events-none absolute -top-12 -right-10 h-44 w-44 rounded-full bg-primary/20 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-14 -left-8 h-40 w-40 rounded-full bg-neon-orange/18 blur-3xl" />
 
@@ -545,6 +530,7 @@ const Shop: React.FC<ShopProps> = ({ walletAddress, locale }) => {
           canBuy ? 'tai-btn-primary pulse-border' : 'bg-zinc-500 text-zinc-200 border-zinc-500 cursor-not-allowed'
         }`}
         disabled={!canBuy}
+        title={!canBuy ? (isZh ? '该档位已达到限购上限' : 'This tier has reached the purchase limit') : undefined}
         onClick={handleBuy}
       >
         {buying

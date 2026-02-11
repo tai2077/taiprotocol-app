@@ -5,7 +5,6 @@ Production-ready Telegram Mini App frontend with Neo-Brutalist UI.
 ## What is implemented
 
 - TonConnect wallet connect/disconnect
-- Onboarding goal setup
 - Home dashboard
 - Sale purchase flow (current deployed SaleContract tier model)
 - Deposit lock flow (Vesting tx entry)
@@ -28,7 +27,12 @@ Copy `.env.example` to `.env.local` and set values:
 
 - `npm run dev`
 - `npm run typecheck`
+- `npm run test`
 - `npm run build`
+- `npm run bundle:check`
+- `npm run standards:check`
+- `npm run ci:offline`
+- `npm run ci:online`
 - `npm run smoke`
 - `npm run smoke:offline`
 - `npm run release:check`

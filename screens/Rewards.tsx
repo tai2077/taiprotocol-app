@@ -1,36 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTonConnectUI, useTonWallet } from '@tonconnect/ui-react';
 import { api } from '../lib/api';
 import { MARKETING_VAULT, SALE_CONTRACT } from '../lib/config';
 import { buildJsonPayload, buildSaleV2ClaimPayload } from '../lib/tx';
 import { useToast } from '../components/ToastProvider';
-import { AppLocale, formatTai } from '../lib/format';
+import { AppLocale, formatTai, toTaiNumber } from '../lib/format';
 import { pollUntil } from '../lib/txConfirm';
 import { getTonProofPayload, serializeTonProofHeader, setupTonProofConnectRequest } from '../lib/tonProof';
 
 interface RewardsProps {
   walletAddress: string | null;
   locale: AppLocale;
-}
-
-function toTai(value: string | number): number {
-  const text = String(value ?? '0');
-  if (text.includes('.')) {
-    const decimal = Number(text);
-    return Number.isFinite(decimal) ? decimal : 0;
-  }
-  if (/^\d+$/.test(text) && text.length >= 10) {
-    try {
-      const nano = BigInt(text);
-      const whole = Number(nano / 1_000_000_000n);
-      const fraction = Number(nano % 1_000_000_000n) / 1_000_000_000;
-      return whole + fraction;
-    } catch {
-      return 0;
-    }
-  }
-  const numeric = Number(text);
-  return Number.isFinite(numeric) ? numeric : 0;
 }
 
 const Rewards: React.FC<RewardsProps> = ({ walletAddress, locale }) => {
@@ -43,6 +23,13 @@ const Rewards: React.FC<RewardsProps> = ({ walletAddress, locale }) => {
   const [loading, setLoading] = useState(false);
   const [claiming, setClaiming] = useState(false);
   const [viewMode, setViewMode] = useState<'claimable' | 'locked'>('claimable');
+  const notifyRef = useRef(notify);
+  const isZhRef = useRef(isZh);
+
+  useEffect(() => {
+    notifyRef.current = notify;
+    isZhRef.current = isZh;
+  }, [notify, isZh]);
 
   useEffect(() => {
     if (!walletAddress) {
@@ -61,7 +48,7 @@ const Rewards: React.FC<RewardsProps> = ({ walletAddress, locale }) => {
           setClaimable(claimableRes.value);
         } else {
           setClaimable(null);
-          notify(isZh ? '奖励数据读取失败' : 'Failed to load reward data', 'error');
+          notifyRef.current(isZhRef.current ? '奖励数据读取失败' : 'Failed to load reward data', 'error');
         }
 
         if (portfolioRes.status === 'fulfilled') {
@@ -77,11 +64,11 @@ const Rewards: React.FC<RewardsProps> = ({ walletAddress, locale }) => {
     return () => {
       cancelled = true;
     };
-  }, [walletAddress, notify, isZh]);
+  }, [walletAddress]);
 
-  const pendingTai = toTai(claimable?.pendingTotalTai || portfolio?.totalPending || 0);
-  const unlockedTai = toTai(claimable?.unlockedTai || 0);
-  const lockedTai = toTai(claimable?.lockedTai || 0);
+  const pendingTai = toTaiNumber(claimable?.pendingTotalTai || portfolio?.totalPending || 0);
+  const unlockedTai = toTaiNumber(claimable?.unlockedTai || 0);
+  const lockedTai = toTaiNumber(claimable?.lockedTai || 0);
   const finalRatio = claimable?.ratios?.finalRatioBp || 0;
   const taskSaveRatio = claimable?.ratios?.taskSaveRatioBp || 0;
   const unlockProgress = pendingTai > 0 ? Math.min(100, Math.round((unlockedTai / Math.max(pendingTai, 1)) * 100)) : 0;
@@ -116,6 +103,9 @@ const Rewards: React.FC<RewardsProps> = ({ walletAddress, locale }) => {
     }
     if (code.includes('SIGNER_NOT_CONFIGURED')) {
       return isZh ? '签名服务未配置，请联系管理员。' : 'Signer is not configured on backend.';
+    }
+    if (code.includes('INVALID_CLAIM_SIGNATURE')) {
+      return isZh ? '领取签名缺失，请稍后重试。' : 'Claim signature is missing. Please retry later.';
     }
     return msg || (isZh ? '领取失败，请重试' : 'Claim failed, please retry');
   };
@@ -177,13 +167,14 @@ const Rewards: React.FC<RewardsProps> = ({ walletAddress, locale }) => {
         });
       } else {
         const data = await api.claimMarketing({ wallet_address: walletAddress });
-        if (data?.data?.amount && data?.data?.nonce && data?.data?.signature) {
-          const payload = buildJsonPayload({ amount: data.data.amount, nonce: data.data.nonce, signature: data.data.signature });
-          await tonConnectUI.sendTransaction({
-            validUntil: Math.floor(Date.now() / 1000) + 600,
-            messages: [{ address: MARKETING_VAULT, amount: '60000000', payload }],
-          });
+        if (!data?.data?.amount || !data?.data?.nonce || !data?.data?.signature) {
+          throw new Error('INVALID_CLAIM_SIGNATURE');
         }
+        const payload = buildJsonPayload({ amount: data.data.amount, nonce: data.data.nonce, signature: data.data.signature });
+        await tonConnectUI.sendTransaction({
+          validUntil: Math.floor(Date.now() / 1000) + 600,
+          messages: [{ address: MARKETING_VAULT, amount: '60000000', payload }],
+        });
       }
 
       const confirmed = await pollUntil(
@@ -192,11 +183,11 @@ const Rewards: React.FC<RewardsProps> = ({ walletAddress, locale }) => {
           setClaimable(next);
           return next;
         },
-        (next) => toTai(next.pendingTotalTai || 0) < pendingBefore,
+        (next) => toTaiNumber(next.pendingTotalTai || 0) < pendingBefore,
         { timeoutMs: 90_000, intervalMs: 3_000 }
       );
 
-      if (confirmed && toTai(confirmed.pendingTotalTai || 0) < pendingBefore) {
+      if (confirmed && toTaiNumber(confirmed.pendingTotalTai || 0) < pendingBefore) {
         notify(isZh ? '奖励已链上确认并领取' : 'Rewards confirmed and claimed on-chain', 'success');
       } else {
         notify(isZh ? '交易已提交，等待链上确认' : 'Transaction submitted, waiting for on-chain confirmation', 'info');
@@ -211,8 +202,8 @@ const Rewards: React.FC<RewardsProps> = ({ walletAddress, locale }) => {
   };
 
   return (
-    <div className="flex-1 flex flex-col safe-content-bottom p-4 gap-4 animate-in fade-in duration-300 grid-background">
-      <div className="neo-card-dark p-5 relative overflow-hidden">
+    <div className="page-view">
+      <div className="neo-card-dark p-6 relative overflow-hidden">
         <div className="pointer-events-none absolute -top-12 -right-14 h-44 w-44 rounded-full bg-primary/20 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-16 -left-8 h-40 w-40 rounded-full bg-accent/20 blur-3xl" />
         <div className="relative z-10">

@@ -58,22 +58,22 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, goals, walletAddress, loca
   const circleOffset = circleCircumference * (1 - progress / 100);
 
   return (
-    <div className="flex-1 flex flex-col grid-background safe-content-bottom p-4 gap-4 animate-in fade-in duration-300">
-      <div className="neo-card-dark p-5 scanline relative overflow-hidden">
+    <div className="page-view">
+      <div className="neo-card-dark p-6 scanline relative overflow-hidden">
         <div className="pointer-events-none absolute -top-14 -right-12 h-44 w-44 rounded-full bg-primary/16 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-16 -left-10 h-44 w-44 rounded-full bg-accent/20 blur-3xl" />
         <div className="flex items-start justify-between gap-3">
           <div className="relative z-10">
             <p className="section-kicker text-accent">{locale === 'zh' ? '存款训练营' : 'Deposit Camp'}</p>
-            <p className="text-xl font-black tracking-tight">{locale === 'zh' ? '通往财富自由之路' : 'Road to Financial Freedom'}</p>
-            <p className="text-xs font-bold text-white/70 mt-1">{locale === 'zh' ? '目标净值' : 'Target Net Worth'} · {formatUsd(stats.wealthGoalUsd, locale)}</p>
+            <p className="text-[1.6rem] font-black tracking-tight leading-tight mt-1">{locale === 'zh' ? '通往财富自由之路' : 'Road to Financial Freedom'}</p>
+            <p className="text-sm font-semibold text-white/72 mt-2">{locale === 'zh' ? '目标净值' : 'Target Net Worth'} · {formatUsd(stats.wealthGoalUsd, locale)}</p>
           </div>
-          <div className="bg-primary text-black brutal-border-thin px-3 py-2 rounded-xl min-w-[98px] text-right relative z-10">
-            <p className="text-[10px] font-black">{locale === 'zh' ? '待领取' : 'Pending'}</p>
-            <p className="text-base font-black">{formatTai(stats.pendingTai, locale)}</p>
+          <div className="bg-primary text-black brutal-border-thin px-3.5 py-2.5 rounded-xl min-w-[112px] text-right relative z-10">
+            <p className="text-[11px] font-black">{locale === 'zh' ? '待领取' : 'Pending'}</p>
+            <p className="text-lg font-black">{formatTai(stats.pendingTai, locale)}</p>
           </div>
         </div>
-        <div className="mt-5 grid grid-cols-[130px_1fr] gap-4 items-center relative z-10">
+        <div className="mt-5 grid grid-cols-[132px_1fr] gap-5 items-center relative z-10">
           <div className="relative mx-auto">
             <svg className="w-[118px] h-[118px] -rotate-90">
               <circle cx="59" cy="59" r={circleRadius} className="fill-none stroke-white/12" strokeWidth="8" />
@@ -94,14 +94,14 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, goals, walletAddress, loca
               <p className="text-[9px] section-kicker text-white/70">{locale === 'zh' ? '已解锁' : 'Unlocked'}</p>
             </div>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             <div className="bg-white/8 brutal-border-thin rounded-xl px-3 py-2">
-              <p className="text-[10px] font-bold text-white/65">{locale === 'zh' ? '链上估值' : 'On-chain Value'}</p>
-              <p className="text-sm font-black">{formatUsd(stats.onchainTai * taiPriceUsd, locale, 2)}</p>
+              <p className="text-[11px] font-bold text-white/65">{locale === 'zh' ? '链上估值' : 'On-chain Value'}</p>
+              <p className="text-base font-black">{formatUsd(stats.onchainTai * taiPriceUsd, locale, 2)}</p>
             </div>
             <div className="bg-white/8 brutal-border-thin rounded-xl px-3 py-2">
-              <p className="text-[10px] font-bold text-white/65">{locale === 'zh' ? '当前价格' : 'Current Price'}</p>
-              <p className="text-sm font-black">{formatUsdPerTai(taiPriceUsd, locale)}</p>
+              <p className="text-[11px] font-bold text-white/65">{locale === 'zh' ? '当前价格' : 'Current Price'}</p>
+              <p className="text-base font-black">{formatUsdPerTai(taiPriceUsd, locale)}</p>
             </div>
           </div>
         </div>
@@ -126,7 +126,7 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, goals, walletAddress, loca
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3.5">
         <div className="neo-card p-4 hover-lift">
           <p className="section-kicker">{locale === 'zh' ? '可用 TAI' : 'Available TAI'}</p>
           <p className="text-lg font-black italic">{formatTai(stats.taiBalance, locale)}</p>
@@ -142,7 +142,7 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, goals, walletAddress, loca
         <p className="text-sm font-black">{stats.tonBalance.toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US', { maximumFractionDigits: 4 })} TON</p>
       </div>
 
-      <div className="neo-card p-4">
+      <div className="neo-card p-5">
         <div className="flex items-center justify-between gap-2">
           <p className="section-kicker">{locale === 'zh' ? '今日任务' : 'Today Missions'} · {missionDoneCount}/{trainingTasks.length}</p>
           <Link to="/missions" className="text-[10px] font-black underline underline-offset-2">
@@ -161,7 +161,7 @@ const Dashboard: React.FC<DashboardProps> = ({ stats, goals, walletAddress, loca
         </div>
       </div>
 
-      <div className="neo-card p-4">
+      <div className="neo-card p-5">
         <p className="section-kicker">{locale === 'zh' ? '快捷操作' : 'Quick Actions'}</p>
         <div className="grid grid-cols-2 gap-2.5 mt-3">
           <Link to="/deposit" className="w-full tai-btn tai-btn-primary hover-lift">

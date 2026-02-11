@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../lib/api';
 import { useToast } from '../components/ToastProvider';
 import { AppLocale } from '../lib/format';
@@ -13,22 +13,34 @@ const Invite: React.FC<InviteProps> = ({ walletAddress, locale }) => {
   const { notify } = useToast();
   const [stats, setStats] = useState<Awaited<ReturnType<typeof api.getInviteStats>> | null>(null);
   const [loading, setLoading] = useState(false);
+  const notifyRef = useRef(notify);
+  const isZhRef = useRef(isZh);
 
   useEffect(() => {
-    if (!walletAddress) return;
+    notifyRef.current = notify;
+    isZhRef.current = isZh;
+  }, [notify, isZh]);
+
+  useEffect(() => {
+    if (!walletAddress) {
+      setStats(null);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     api
       .getInviteStats(walletAddress)
       .then((d) => setStats(d || null))
       .catch(() => {
         setStats(null);
-        notify(isZh ? '邀请数据暂不可用' : 'Invite data is temporarily unavailable', 'error');
+        notifyRef.current(isZhRef.current ? '邀请数据暂不可用' : 'Invite data is temporarily unavailable', 'error');
       })
       .finally(() => setLoading(false));
-  }, [walletAddress, notify, isZh]);
+  }, [walletAddress]);
 
-  const link = stats?.inviteLink || (walletAddress
-    ? `https://t.me/taitoken_bot?startapp=ref_${walletAddress.slice(0, 8).toUpperCase()}`
+  const fallbackCode = walletAddress ? walletAddress.slice(0, 8).toUpperCase() : '';
+  const link = stats?.inviteLink || (fallbackCode
+    ? `https://mini.tai.lat/sale?ref=${fallbackCode}`
     : isZh ? '请先连接钱包' : 'Connect wallet first');
 
   const copyLink = async () => {
@@ -70,8 +82,8 @@ const Invite: React.FC<InviteProps> = ({ walletAddress, locale }) => {
   }, [inviteCount, isZh]);
 
   return (
-    <div className="flex-1 flex flex-col safe-content-bottom p-4 gap-4 animate-in fade-in duration-300 grid-background">
-      <div className="neo-card-dark p-5 relative overflow-hidden">
+    <div className="page-view">
+      <div className="neo-card-dark p-6 relative overflow-hidden">
         <div className="pointer-events-none absolute -top-12 -right-12 h-44 w-44 rounded-full bg-primary/20 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-16 -left-8 h-40 w-40 rounded-full bg-neon-orange/20 blur-3xl" />
         <div className="relative z-10">
@@ -121,7 +133,7 @@ const Invite: React.FC<InviteProps> = ({ walletAddress, locale }) => {
         <div className="flex items-center justify-between gap-2">
           <p className="section-kicker">{isZh ? '邀请链接' : 'Invite Link'}</p>
           <span className="text-[10px] font-black px-2 py-1 rounded-full bg-primary/15 border border-primary/30">
-            {isZh ? '机器人入口' : 'Bot Entry'}
+            {isZh ? 'Mini App 入口' : 'Mini App Entry'}
           </span>
         </div>
         <p className="text-xs font-black break-all mt-2 text-black/75">{link}</p>

@@ -1,23 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { safeGetStorage, safeSetStorage } from '../lib/storage';
 
 const DISMISS_KEY = 'tai:pwa-install-dismissed:v1';
 type Locale = 'zh' | 'en';
-
-function safeGetStorage(key: string): string | null {
-  try {
-    return window.localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
-function safeSetStorage(key: string, value: string): void {
-  try {
-    window.localStorage.setItem(key, value);
-  } catch {
-    // ignore storage errors
-  }
-}
 
 function isStandaloneMode(): boolean {
   const media = window.matchMedia?.('(display-mode: standalone)')?.matches;
