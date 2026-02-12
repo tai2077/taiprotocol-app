@@ -4,6 +4,7 @@ export interface UserStats {
   taiBalance: number;
   lockedTai: number;
   pendingTai: number;
+  points: number;
   wealthGoalUsd: number;
   onchainTai: number;
 }

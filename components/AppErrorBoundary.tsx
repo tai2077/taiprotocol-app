@@ -53,10 +53,10 @@ export class AppErrorBoundary extends React.Component<{ children: React.ReactNod
       const text = COPY[locale];
       return (
         <div className="min-h-screen app-atmosphere flex items-center justify-center p-6">
-          <div className="max-w-[430px] w-full neo-card p-6">
+          <div className="max-w-[430px] w-full hero-card p-6">
             <p className="section-kicker">{text.kicker}</p>
             <h1 className="text-2xl font-black tracking-tight mt-2">{text.title}</h1>
-            <p className="text-xs font-bold text-black/70 mt-2">{text.body}</p>
+            <p className="text-xs font-bold text-white/70 mt-2">{text.body}</p>
           </div>
         </div>
       );

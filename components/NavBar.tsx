@@ -1,8 +1,17 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 
-const IconBase: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+const IconBase: React.FC<{ children: React.ReactNode; size?: string }> = ({ children, size = 'w-5 h-5' }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.6"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={size}
+    aria-hidden="true"
+  >
     {children}
   </svg>
 );
@@ -14,28 +23,26 @@ const HomeIcon = () => (
   </IconBase>
 );
 
-const LockIcon = () => (
+const AssetIcon = () => (
   <IconBase>
-    <rect x="4.5" y="10.5" width="15" height="10" rx="2.2" />
-    <path d="M8.3 10.5V8.2a3.7 3.7 0 1 1 7.4 0v2.3" />
+    <rect x="3.8" y="7.2" width="16.4" height="13" rx="2.2" />
+    <path d="M3.8 11.2h16.4" />
+    <path d="M15 15.6h2.9" />
+    <circle cx="10.1" cy="15.7" r="1.2" />
   </IconBase>
 );
 
-const InviteIcon = () => (
-  <IconBase>
-    <circle cx="9" cy="9" r="2.4" />
-    <circle cx="16.5" cy="8.2" r="2.1" />
-    <path d="M4.8 19c.9-2.4 3-3.7 5.3-3.7s4.4 1.3 5.3 3.7" />
-    <path d="M14 19c.7-1.6 2-2.5 3.5-2.5 1 0 1.9.3 2.7 1" />
+const SupplyIcon = () => (
+  <IconBase size="w-6 h-6">
+    <path d="M6 8.2h12l1.2 11H4.8L6 8.2z" />
+    <path d="M8.3 8.2V6.9a3.7 3.7 0 0 1 7.4 0v1.3" />
+    <path d="M12 10.5l-1.5 2.8h1.8l-1.2 2.2" />
   </IconBase>
 );
 
-const RewardIcon = () => (
+const PointsIcon = () => (
   <IconBase>
-    <path d="M12 21V13" />
-    <path d="M6 13h12" />
-    <path d="M7.2 8.2c0 1.5 1.2 2.8 2.8 2.8H12V8.4c0-2-1.3-3.4-3.3-3.4-1 0-1.7.3-2.3 1-.5.6-.8 1.3-.8 2.2z" />
-    <path d="M16.8 8.2c0 1.5-1.2 2.8-2.8 2.8H12V8.4c0-2 1.3-3.4 3.3-3.4 1 0 1.7.3 2.3 1 .5.6.8 1.3.8 2.2z" />
+    <path d="M12 3.2l2.3 4.6 5.1.7-3.7 3.5.9 5.2-4.6-2.4-4.6 2.4.9-5.2-3.7-3.5 5.1-.7L12 3.2z" />
   </IconBase>
 );
 
@@ -46,32 +53,87 @@ const ProfileIcon = () => (
   </IconBase>
 );
 
-const NavBar: React.FC<{ locale: 'zh' | 'en' }> = ({ locale }) => {
+interface NavBarProps {
+  locale: 'zh' | 'en';
+}
+
+const NavBar: React.FC<NavBarProps> = ({ locale }) => {
   const items = [
-    { to: '/home', label: locale === 'zh' ? '首页' : 'Home', icon: <HomeIcon /> },
-    { to: '/deposit', label: locale === 'zh' ? '存款' : 'Deposit', icon: <LockIcon /> },
-    { to: '/invite', label: locale === 'zh' ? '邀请' : 'Invite', icon: <InviteIcon /> },
-    { to: '/rewards', label: locale === 'zh' ? '奖励' : 'Rewards', icon: <RewardIcon /> },
-    { to: '/profile', label: locale === 'zh' ? '我的' : 'Profile', icon: <ProfileIcon /> },
+    { to: '/home', label: locale === 'zh' ? '首页' : 'Home', icon: <HomeIcon />, center: false },
+    { to: '/deposit', label: locale === 'zh' ? '资产' : 'Asset', icon: <AssetIcon />, center: false },
+    { to: '/sale', label: locale === 'zh' ? '补给' : 'Supply', icon: <SupplyIcon />, center: true },
+    { to: '/rewards', label: locale === 'zh' ? '积分' : 'Points', icon: <PointsIcon />, center: false },
+    { to: '/profile', label: locale === 'zh' ? '我的' : 'Profile', icon: <ProfileIcon />, center: false },
   ];
 
   return (
-    <div className="fixed safe-nav-bottom left-1/2 -translate-x-1/2 w-[94%] max-w-[520px] z-50">
-      <div className="bg-bg-dark/84 backdrop-blur-2xl border border-white/15 rounded-[1.6rem] p-2.5 flex justify-around items-center shadow-brutal-xl pulse-border">
-        {items.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              `relative flex flex-col items-center justify-center gap-1 transition-all px-3 py-2.5 min-w-12 min-h-11 rounded-xl ${
-                isActive ? 'text-bg-dark bg-primary brutal-border-thin border-primary/55 shadow-brutal-active' : 'text-white/68 hover:text-white'
-              }`
-            }
-          >
-            <span className="leading-none">{item.icon}</span>
-            <span className="text-[10px] font-black leading-none">{item.label}</span>
-          </NavLink>
-        ))}
+    <div className="fixed safe-nav-bottom left-1/2 -translate-x-1/2 w-[96%] max-w-[520px] z-50 px-1">
+      <div
+        className="neo-card-dark rounded-[1.18rem] px-3 pb-2 pt-1.5"
+        style={{
+          background:
+            'linear-gradient(180deg, rgba(10,10,10,0.92) 0%, rgba(10,10,10,0.98) 100%)',
+          borderColor: 'rgba(207,172,86,0.18)',
+        }}
+      >
+        <div className="flex items-end justify-between gap-1">
+          {items.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) => {
+                if (item.center) {
+                  return `relative flex-1 flex flex-col items-center justify-end min-h-[68px] ${
+                    isActive ? 'text-white' : 'text-white/90'
+                  }`;
+                }
+                return `relative flex-1 flex flex-col items-center justify-center gap-1.5 px-1 pt-2 pb-1.5 min-h-[60px] rounded-xl transition-all ${
+                  isActive ? 'text-[#cfac56]' : 'text-[#cfac56]/70'
+                }`;
+              }}
+            >
+              {({ isActive }) => (
+                <>
+                  {item.center ? (
+                    <>
+                      <span
+                        className="flex items-center justify-center rounded-full"
+                        style={{
+                          width: '56px',
+                          height: '56px',
+                          marginTop: '-17px',
+                          color: '#fff7ea',
+                          background:
+                            'linear-gradient(180deg, #ff4d6a 0%, #c8102e 100%)',
+                          border: '2px solid rgba(207,172,86,0.45)',
+                          boxShadow:
+                            '0 0 0 4px rgba(10,10,10,0.92), 0 8px 22px rgba(200,16,46,0.42), 0 0 16px rgba(200,16,46,0.2)',
+                        }}
+                      >
+                        {item.icon}
+                      </span>
+                      <span className="text-[10px] font-black leading-none text-[#cfac56] mt-1">{item.label}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className={`leading-none ${isActive ? 'drop-shadow-[0_0_6px_rgba(207,172,86,0.42)]' : ''}`}>{item.icon}</span>
+                      <span className={`text-[10px] font-black leading-none ${isActive ? 'text-[#cfac56]' : 'text-[#cfac56]/74'}`}>
+                        {item.label}
+                      </span>
+                      <span
+                        className={`h-[2px] rounded-full transition-all ${
+                          isActive
+                            ? 'w-6 bg-gradient-to-r from-[#f6df9a] to-[#cfac56] opacity-100 shadow-[0_0_7px_rgba(207,172,86,0.5)]'
+                            : 'w-0 opacity-0'
+                        }`}
+                      />
+                    </>
+                  )}
+                </>
+              )}
+            </NavLink>
+          ))}
+        </div>
       </div>
     </div>
   );

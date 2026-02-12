@@ -19,6 +19,11 @@ export function formatTai(value: number, locale: AppLocale, maximumFractionDigit
   return `${safe.toLocaleString(localeTag(locale), { maximumFractionDigits })} TAI`;
 }
 
+export function formatPoints(value: number, locale: AppLocale): string {
+  const safe = Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+  return `${safe.toLocaleString(localeTag(locale))} PTS`;
+}
+
 export function toTaiNumber(value: unknown): number {
   const text = String(value ?? '0').trim();
   if (!text) return 0;

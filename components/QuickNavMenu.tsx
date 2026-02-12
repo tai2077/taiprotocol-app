@@ -13,13 +13,18 @@ const QuickNavMenu: React.FC<QuickNavMenuProps> = ({ locale }) => {
 
   const items = [
     { to: '/home', label: isZh ? '首页' : 'Home' },
-    { to: '/sale', label: isZh ? '补给' : 'Shop' },
     { to: '/deposit', label: isZh ? '存款' : 'Deposit' },
-    { to: '/invite', label: isZh ? '邀请' : 'Invite' },
-    { to: '/rewards', label: isZh ? '奖励' : 'Rewards' },
-    { to: '/missions', label: isZh ? '任务' : 'Missions' },
-    { to: '/leaderboard', label: isZh ? '榜单' : 'Leaderboard' },
+    { to: '/sale', label: isZh ? '补给' : 'Supply' },
+    { to: '/rewards', label: isZh ? '积分' : 'Points' },
     { to: '/profile', label: isZh ? '我的' : 'Profile' },
+  ];
+  const moreItems = [
+    { to: '/missions', label: isZh ? '积分任务' : 'Point Missions' },
+    { to: '/unlocks', label: isZh ? '积分解锁' : 'Point Unlocks' },
+    { to: '/invite', label: isZh ? '积分邀请' : 'Point Invite' },
+    { to: '/stake', label: isZh ? '固定质押' : 'Fixed Stake' },
+    { to: '/leaderboard', label: isZh ? '榜单' : 'Leaderboard' },
+    { to: '/achievements', label: isZh ? '成就' : 'Achievements' },
   ];
 
   useEffect(() => {
@@ -47,7 +52,7 @@ const QuickNavMenu: React.FC<QuickNavMenuProps> = ({ locale }) => {
     <div className="relative" ref={menuRef}>
       <button
         type="button"
-        className="tap-target bg-white/12 text-white brutal-border-thin px-3 py-2 text-[11px] font-black rounded-xl hover-lift"
+        className="tap-target tai-btn tai-btn-soft !min-h-9 !px-3 !py-2 !text-[11px]"
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
         aria-haspopup="menu"
@@ -55,16 +60,37 @@ const QuickNavMenu: React.FC<QuickNavMenuProps> = ({ locale }) => {
         {isZh ? '菜单' : 'Menu'}
       </button>
       {open && (
-        <div className="absolute right-0 top-[calc(100%+0.55rem)] w-52 neo-card p-2.5 z-50 shadow-brutal-xl">
-          <div className="grid grid-cols-2 gap-1.5">
+        <div className="absolute right-0 top-[calc(100%+0.55rem)] w-60 neo-card p-2.5 z-50">
+          <div className="grid grid-cols-5 gap-1.5">
             {items.map((item) => {
               const active = location.pathname === item.to;
               return (
                 <Link
                   key={item.to}
                   to={item.to}
-                  className={`text-center text-[11px] font-black rounded-lg px-2 py-2.5 brutal-border-thin transition ${
-                    active ? 'bg-bg-dark text-primary border-primary/40' : 'bg-white text-black hover:bg-primary/10'
+                  className={`text-center text-[10px] font-black rounded-lg px-1.5 py-2 brutal-border-thin transition ${
+                    active
+                      ? 'bg-primary text-white border-transparent shadow-[0_8px_14px_rgba(200,16,46,0.35)]'
+                      : 'imperial-data text-white hover:opacity-90'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+          <p className="text-[9px] font-black text-white/55 mt-2.5 mb-1 px-1">{isZh ? '更多入口' : 'More'}</p>
+          <div className="grid grid-cols-2 gap-1.5">
+            {moreItems.map((item) => {
+              const active = location.pathname === item.to;
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={`text-center text-[10px] font-black rounded-lg px-2 py-2 brutal-border-thin transition ${
+                    active
+                      ? 'bg-primary text-white border-transparent shadow-[0_8px_14px_rgba(200,16,46,0.35)]'
+                      : 'imperial-data text-white hover:opacity-90'
                   }`}
                 >
                   {item.label}

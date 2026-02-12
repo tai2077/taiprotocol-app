@@ -5,7 +5,7 @@ import { api } from '../lib/api';
 import { SALE_CONTRACT } from '../lib/config';
 import { buildTextPayload } from '../lib/tx';
 import { useToast } from '../components/ToastProvider';
-import { AppLocale, formatTai } from '../lib/format';
+import { AppLocale, formatPoints } from '../lib/format';
 import { safeGetStorage, safeSetStorage } from '../lib/storage';
 import { pollUntil } from '../lib/txConfirm';
 import { getTonProofPayload, serializeTonProofHeader, setupTonProofConnectRequest } from '../lib/tonProof';
@@ -20,9 +20,9 @@ interface SalePackage {
   enName: string;
   ton: string;
   tonNano: string;
-  baseReward: number;
-  taskReward: number;
-  totalReward: number;
+  basePoints: number;
+  taskPoints: number;
+  totalPoints: number;
   maxPurchases: number;
   op: string;
   desc: string;
@@ -39,9 +39,9 @@ const PACKAGES: SalePackage[] = [
     enName: 'Starter',
     ton: '9.99',
     tonNano: '9990000000',
-    baseReward: 60_000,
-    taskReward: 120_000,
-    totalReward: 180_000,
+    basePoints: 60_000,
+    taskPoints: 120_000,
+    totalPoints: 180_000,
     maxPurchases: 3,
     op: 'buy_tier1',
     desc: '轻量入门，先创建第一个目标',
@@ -55,9 +55,9 @@ const PACKAGES: SalePackage[] = [
     enName: 'Booster',
     ton: '99.99',
     tonNano: '99990000000',
-    baseReward: 600_000,
-    taskReward: 1_200_000,
-    totalReward: 1_800_000,
+    basePoints: 600_000,
+    taskPoints: 1_200_000,
+    totalPoints: 1_800_000,
     maxPurchases: 2,
     op: 'buy_tier2',
     desc: '快速补存，缩短达标时间',
@@ -72,9 +72,9 @@ const PACKAGES: SalePackage[] = [
     enName: 'Rank Rush',
     ton: '999.99',
     tonNano: '999990000000',
-    baseReward: 6_000_000,
-    taskReward: 12_000_000,
-    totalReward: 18_000_000,
+    basePoints: 6_000_000,
+    taskPoints: 12_000_000,
+    totalPoints: 18_000_000,
     maxPurchases: 1,
     op: 'buy_tier3',
     desc: '冲刺榜单与裂变任务进度',
@@ -141,6 +141,7 @@ const Shop: React.FC<ShopProps> = ({ walletAddress, locale }) => {
   const pkg = useMemo(() => PACKAGES[selected], [selected]);
   const shortAddress = walletAddress ? walletAddress.toLowerCase() : '';
   const txProgress = txStep === 'idle' ? 0 : txStep === 'sending' ? 25 : txStep === 'submitted' ? 50 : txStep === 'confirming' ? 75 : 100;
+  const txSteps = isZh ? ['发送', '提交', '确认', '完成'] : ['Send', 'Submit', 'Confirm', 'Done'];
   const ingestionProgress =
     ingestionStep === 'idle'
       ? 0
@@ -354,7 +355,10 @@ const Shop: React.FC<ShopProps> = ({ walletAddress, locale }) => {
               return { ...prev, [key]: Math.min(PACKAGES.find((p) => p.tier === pkg.tier)?.maxPurchases || prev[key] + 1, prev[key] + 1) };
             });
           });
-        notify(isZh ? `购买已链上确认：${formatTai(pkg.totalReward, locale)}` : `Purchase confirmed: ${formatTai(pkg.totalReward, locale)}`, 'success');
+        notify(
+          isZh ? `购买已链上确认，积分 +${formatPoints(pkg.totalPoints, locale)}` : `Purchase confirmed, points +${formatPoints(pkg.totalPoints, locale)}`,
+          'success'
+        );
         window.setTimeout(() => {
           setTxStep('idle');
           setIngestionStep('idle');
@@ -391,44 +395,45 @@ const Shop: React.FC<ShopProps> = ({ walletAddress, locale }) => {
 
   return (
     <div className="page-view">
-      <div className="neo-card-dark p-6 relative overflow-hidden scanline">
-        <div className="pointer-events-none absolute -top-12 -right-10 h-44 w-44 rounded-full bg-primary/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-14 -left-8 h-40 w-40 rounded-full bg-neon-orange/18 blur-3xl" />
+      <div className="hero-card p-6">
 
-        <div className="relative z-10">
-          <p className="section-kicker text-accent">{isZh ? '销售补给矩阵' : 'Supply Matrix'}</p>
-          <p className="text-2xl font-black tracking-tight mt-1">
+        <div>
+          <p className="section-kicker">{isZh ? '销售补给矩阵' : 'Supply Matrix'}</p>
+          <p className="text-3xl font-black tracking-tight mt-1">
             {isZh ? '当前补给：' : 'Selected: '}
-            <span className="text-gradient-accent">{isZh ? pkg.name : pkg.enName}</span>
+            <span>{isZh ? pkg.name : pkg.enName}</span>
           </p>
-          <p className="text-xs font-bold text-white/70 mt-1">{isZh ? pkg.desc : pkg.enDesc}</p>
+          <p className="text-xs font-bold text-white/60 mt-1">{isZh ? pkg.desc : pkg.enDesc}</p>
 
           <div className="mt-4 grid grid-cols-3 gap-2">
-            <div className="bg-white/10 brutal-border-thin rounded-xl px-2.5 py-2">
+            <div className="imperial-data rounded-xl px-2.5 py-2">
               <p className="text-[9px] font-bold text-white/60">TON</p>
               <p className="text-sm font-black">{pkg.ton}</p>
             </div>
-            <div className="bg-white/10 brutal-border-thin rounded-xl px-2.5 py-2">
-              <p className="text-[9px] font-bold text-white/60">{isZh ? '总奖励' : 'Total'}</p>
-              <p className="text-sm font-black">{formatTai(pkg.totalReward, locale)}</p>
+            <div className="imperial-data rounded-xl px-2.5 py-2">
+              <p className="text-[9px] font-bold text-white/60">{isZh ? '总积分' : 'Total Points'}</p>
+              <p className="text-sm font-black">{formatPoints(pkg.totalPoints, locale)}</p>
             </div>
-            <div className="bg-primary text-bg-dark brutal-border-thin rounded-xl px-2.5 py-2">
+            <div className="imperial-deep rounded-xl px-2.5 py-2">
               <p className="text-[9px] font-bold">{isZh ? '剩余可购' : 'Remaining'}</p>
               <p className="text-sm font-black">{selectedRemaining}</p>
             </div>
           </div>
+          <p className="text-[10px] font-bold text-white/60 mt-2">
+            {isZh ? '购买获得积分，积分用于下一轮代币解锁优先购买额度。' : 'Purchases grant points used for next-round unlock priority quota.'}
+          </p>
         </div>
       </div>
 
       {inviteCode && (
         <div className="neo-card p-3.5">
-          <p className="text-[10px] font-black uppercase tracking-wider text-black/55">{isZh ? '邀请码已绑定' : 'Invite Code Bound'}</p>
+          <p className="text-[10px] font-black uppercase tracking-wider text-white/55">{isZh ? '邀请码已绑定' : 'Invite Code Bound'}</p>
           <p className="text-sm font-black mt-1">{inviteCode}</p>
         </div>
       )}
 
       {txStep !== 'idle' && (
-        <div className="neo-card-dark p-4">
+        <div className="neo-card p-4">
           <div className="flex items-center justify-between text-xs font-black">
             <span>{isZh ? '交易进度' : 'Transaction Progress'}</span>
             <span>
@@ -438,22 +443,47 @@ const Shop: React.FC<ShopProps> = ({ walletAddress, locale }) => {
               {txStep === 'confirmed' && (isZh ? '已完成' : 'Completed')}
             </span>
           </div>
-          <div className="mt-2 h-3 rounded-full bg-white/10 overflow-hidden p-[1px]">
-            <div className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all duration-300" style={{ width: `${txProgress}%` }} />
+          <div className="mt-2 imperial-progress-track">
+            <div className="imperial-progress-fill" style={{ width: `${txProgress}%` }} />
+          </div>
+          <div className="mt-3 flex items-center justify-between px-1">
+            {txSteps.map((step, idx) => {
+              const done = txProgress >= (idx + 1) * 25;
+              return (
+                <div key={step} className="flex flex-col items-center gap-1">
+                  <span
+                    className="w-2 h-2 rounded-full"
+                    style={
+                      done
+                        ? {
+                          background:
+                            'linear-gradient(180deg, #f6df9a 0%, #cfac56 100%)',
+                          boxShadow: '0 0 8px rgba(207,172,86,0.35)',
+                        }
+                        : {
+                          background: '#131313',
+                          border: '1px solid rgba(207,172,86,0.24)',
+                        }
+                    }
+                  />
+                  <span className="text-[8px] font-black text-white/55">{step}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
 
       {ingestionStep !== 'idle' && (
-        <div className={`neo-card-dark p-4 ${ingestionStep === 'error' ? 'border border-red-400/50' : ''}`}>
+        <div className={`neo-card p-4 ${ingestionStep === 'error' ? 'bg-[#2A0A10] border border-primary/45' : ''}`}>
           <div className="flex items-center justify-between text-xs font-black">
             <span>{isZh ? '入账状态' : 'Ingestion Status'}</span>
             <span>{ingestionLabel}</span>
           </div>
-          <p className="mt-1 text-[11px] font-bold text-white/70">{ingestionNote}</p>
-          <div className="mt-2 h-2 rounded-full bg-white/10 overflow-hidden p-[1px]">
+          <p className="mt-1 text-[11px] font-bold text-white/65">{ingestionNote}</p>
+          <div className="mt-2 imperial-progress-track-sm">
             <div
-              className={`h-full rounded-full transition-all duration-300 ${ingestionStep === 'error' ? 'bg-red-400' : 'bg-gradient-to-r from-accent to-primary'}`}
+              className={`h-full rounded-full transition-all duration-300 ${ingestionStep === 'error' ? 'bg-red-400' : 'imperial-progress-fill'}`}
               style={{ width: `${ingestionProgress}%` }}
             />
           </div>
@@ -467,20 +497,49 @@ const Shop: React.FC<ShopProps> = ({ walletAddress, locale }) => {
           const key = `tier${p.tier}` as TierKey;
           const used = purchaseCounts[key] || 0;
           const usagePct = Math.round((used / p.maxPurchases) * 100);
+          const selectedStyle: React.CSSProperties | undefined =
+            idx === selected
+              ? {
+                background:
+                  'radial-gradient(120% 100% at 50% -20%, rgba(200, 16, 46, 0.15), transparent 60%), linear-gradient(180deg, rgba(20, 9, 11, 0.96), rgba(10, 10, 10, 0.98))',
+                borderColor: 'rgba(207, 172, 86, 0.45)',
+                boxShadow:
+                  '0 0 0 1px rgba(207, 172, 86, 0.12) inset, 0 16px 32px -8px rgba(0, 0, 0, 0.5), 0 0 20px rgba(207, 172, 86, 0.08)',
+              }
+              : undefined;
+          const badgeStyle: React.CSSProperties = p.highlight
+            ? {
+              background: 'linear-gradient(180deg, #ff4d6a 0%, #c8102e 100%)',
+              color: '#fff',
+              border: '1px solid rgba(255, 200, 200, 0.3)',
+              boxShadow: '0 4px 12px rgba(200, 16, 46, 0.4)',
+            }
+            : {
+              background: 'linear-gradient(180deg, #ffe4a0 0%, #cfac56 100%)',
+              color: '#2a1700',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              boxShadow: '0 4px 12px rgba(139, 104, 38, 0.35)',
+            };
 
           return (
             <button
               key={p.tier}
               disabled={soldOut}
-              className={`relative text-left p-4 rounded-2xl transition-all border ${
-                soldOut ? 'opacity-55 cursor-not-allowed bg-white/60 text-black border-black/10' : 'hover-lift'
+              className={`relative text-left p-4 rounded-2xl transition-all ${
+                soldOut ? 'opacity-55 cursor-not-allowed imperial-data text-white' : 'hover-lift'
               } ${
-                idx === selected ? 'bg-bg-dark text-white border-primary/45 shadow-[0_16px_26px_-20px_rgba(13,242,128,0.8)]' : 'neo-card text-black'
+                idx === selected
+                  ? 'imperial-deep text-white ring-1 ring-accent/45 shadow-[0_14px_28px_rgba(207,172,86,0.18)]'
+                  : 'neo-card text-white'
               }`}
+              style={selectedStyle}
               onClick={() => !soldOut && setSelected(idx)}
             >
               {p.tag && (
-                <span className={`absolute -top-2 -right-1 text-[10px] font-black px-2 py-0.5 rounded-full brutal-border-thin ${idx === selected ? 'bg-primary text-bg-dark border-primary/45' : 'bg-white text-black'}`}>
+                <span
+                  className="absolute -top-2 -right-1 text-[10px] font-black px-2.5 py-1 rounded-full leading-none"
+                  style={badgeStyle}
+                >
                   {isZh ? p.tag : p.enTag}
                 </span>
               )}
@@ -488,34 +547,34 @@ const Shop: React.FC<ShopProps> = ({ walletAddress, locale }) => {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="font-black uppercase text-lg tracking-tight">{locale === 'zh' ? p.name : p.enName}</p>
-                  <p className={`text-[11px] font-bold ${idx === selected ? 'text-white/70' : 'text-black/60'}`}>{locale === 'zh' ? p.desc : p.enDesc}</p>
+                  <p className={`text-[11px] font-bold ${idx === selected ? 'text-white/70' : 'text-white/60'}`}>{locale === 'zh' ? p.desc : p.enDesc}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-black text-2xl leading-none">{p.ton}</p>
-                  <p className={`text-[10px] font-black ${idx === selected ? 'text-white/65' : 'text-black/55'}`}>TON</p>
+                  <p className="font-black text-2xl leading-none number-display">{p.ton}</p>
+                  <p className={`text-[10px] font-black ${idx === selected ? 'text-white/65' : 'text-white/55'}`}>TON</p>
                 </div>
               </div>
 
-              <div className={`mt-3 space-y-1.5 text-xs font-bold ${idx === selected ? 'text-white/80' : 'text-black/75'}`}>
-                <div className="flex justify-between">
-                  <span>{isZh ? '基础奖励' : 'Base Reward'}</span>
-                  <span>{formatTai(p.baseReward, locale)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>{isZh ? '任务奖励' : 'Task Reward'}</span>
-                  <span>{formatTai(p.taskReward, locale)}</span>
-                </div>
-                <div className="flex justify-between border-t pt-1 border-current/20 font-black">
+                <div className={`mt-3 space-y-1.5 text-xs font-bold ${idx === selected ? 'text-white/80' : 'text-white/75'}`}>
+                  <div className="flex justify-between">
+                  <span>{isZh ? '基础积分' : 'Base Points'}</span>
+                  <span>{formatPoints(p.basePoints, locale)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                  <span>{isZh ? '任务积分' : 'Task Points'}</span>
+                  <span>{formatPoints(p.taskPoints, locale)}</span>
+                  </div>
+                  <div className="flex justify-between pt-1 font-black opacity-90">
                   <span>{isZh ? '总计' : 'Total'}</span>
-                  <span>{formatTai(p.totalReward, locale)}</span>
+                  <span>{formatPoints(p.totalPoints, locale)}</span>
+                  </div>
                 </div>
-              </div>
 
               <div className="mt-2.5">
-                <div className={`h-2 rounded-full overflow-hidden ${idx === selected ? 'bg-white/18' : 'bg-black/10'}`}>
-                  <div className={`h-full ${idx === selected ? 'bg-primary' : 'bg-bg-dark/70'}`} style={{ width: `${Math.min(100, usagePct)}%` }} />
+                <div className={`h-2 rounded-full overflow-hidden ${idx === selected ? 'bg-black/25' : 'bg-black/10'}`}>
+                  <div className={`h-full ${idx === selected ? 'bg-primary' : 'bg-accent/55'}`} style={{ width: `${Math.min(100, usagePct)}%` }} />
                 </div>
-                <div className={`mt-1 flex items-center justify-between text-[10px] font-black ${idx === selected ? 'text-white/65' : 'text-black/55'}`}>
+                <div className={`mt-1 flex items-center justify-between text-[10px] font-black ${idx === selected ? 'text-white/65' : 'text-white/55'}`}>
                   <span>{isZh ? `已购 ${used}/${p.maxPurchases}` : `${used}/${p.maxPurchases} used`}</span>
                   <span>{soldOut ? (isZh ? '已达上限' : 'Limit reached') : (isZh ? `剩余 ${remaining}` : `${remaining} left`)}</span>
                 </div>
@@ -527,7 +586,7 @@ const Shop: React.FC<ShopProps> = ({ walletAddress, locale }) => {
 
       <button
         className={`w-full tai-btn text-sm ${
-          canBuy ? 'tai-btn-primary pulse-border' : 'bg-zinc-500 text-zinc-200 border-zinc-500 cursor-not-allowed'
+          canBuy ? 'tai-btn-primary' : 'tai-btn-soft opacity-55 cursor-not-allowed'
         }`}
         disabled={!canBuy}
         title={!canBuy ? (isZh ? '该档位已达到限购上限' : 'This tier has reached the purchase limit') : undefined}
@@ -548,18 +607,18 @@ const Shop: React.FC<ShopProps> = ({ walletAddress, locale }) => {
           : (isZh ? `链上购买次数：T1 ${purchaseCounts.tier1} / T2 ${purchaseCounts.tier2} / T3 ${purchaseCounts.tier3}` : `On-chain counts: T1 ${purchaseCounts.tier1} / T2 ${purchaseCounts.tier2} / T3 ${purchaseCounts.tier3}`)}
       </div>
 
-      <div className="neo-card-dark p-4">
+      <div className="neo-card p-4">
         <div className="flex items-center justify-between gap-2">
-          <p className="section-kicker text-accent">{isZh ? '最近购买' : 'Recent Purchases'}</p>
+          <p className="section-kicker">{isZh ? '最近购买' : 'Recent Purchases'}</p>
           <p className="text-[10px] font-black text-white/55">{loadingRecent ? '...' : recent.length}</p>
         </div>
         <div className="mt-2 space-y-2">
-          {loadingRecent && <p className="text-xs font-bold text-white/70">{isZh ? '加载中...' : 'Loading...'}</p>}
-          {!loadingRecent && recent.length === 0 && <p className="text-xs font-bold text-white/70">{isZh ? '暂无购买记录' : 'No purchase history'}</p>}
+          {loadingRecent && <p className="text-xs font-bold text-white/60">{isZh ? '加载中...' : 'Loading...'}</p>}
+          {!loadingRecent && recent.length === 0 && <p className="text-xs font-bold text-white/60">{isZh ? '暂无购买记录' : 'No purchase history'}</p>}
           {recent.slice(0, 5).map((r, i) => (
-            <div key={i} className="bg-white/8 brutal-border-thin rounded-xl px-3 py-2 flex items-center justify-between text-xs font-black">
+            <div key={i} className="data-block flex items-center justify-between text-xs font-black">
               <span className="truncate pr-2">{isZh ? `${r.address} 购买` : `${r.address} bought`}</span>
-              <span className="text-primary">T{r.tier}</span>
+              <span className="text-accent">T{r.tier}</span>
             </div>
           ))}
         </div>

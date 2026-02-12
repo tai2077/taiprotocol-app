@@ -57,29 +57,28 @@ const Achievements: React.FC<AchievementsProps> = ({ locale }) => {
 
   return (
     <div className="page-view">
-      <div className="neo-card-dark p-6 relative overflow-hidden">
-        <div className="pointer-events-none absolute -top-12 -right-10 h-44 w-44 rounded-full bg-primary/18 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-16 -left-8 h-40 w-40 rounded-full bg-accent/18 blur-3xl" />
-
-        <div className="relative z-10">
-          <p className="section-kicker text-accent">{isZh ? '徽章墙' : 'Badge Wall'}</p>
-          <h2 className="text-2xl font-black tracking-tight mt-1">{isZh ? '成就' : 'Achievements'}</h2>
+      <div className="hero-card p-6">
+        <div>
+          <p className="section-kicker">{isZh ? '徽章墙' : 'Badge Wall'}</p>
+          <p className="text-[11px] font-bold text-white/60 mt-2">
+            {isZh ? '完成训练与成长路径，逐步解锁徽章。' : 'Complete growth milestones to unlock badges.'}
+          </p>
           <div className="mt-3 grid grid-cols-3 gap-2">
-            <div className="bg-white/10 brutal-border-thin rounded-xl px-2.5 py-2">
+            <div className="imperial-data rounded-xl px-2.5 py-2">
               <p className="text-[9px] font-bold text-white/60">{isZh ? '已解锁' : 'Unlocked'}</p>
               <p className="text-sm font-black">{unlockedCount}</p>
             </div>
-            <div className="bg-white/10 brutal-border-thin rounded-xl px-2.5 py-2">
+            <div className="imperial-data rounded-xl px-2.5 py-2">
               <p className="text-[9px] font-bold text-white/60">{isZh ? '总数量' : 'Total'}</p>
               <p className="text-sm font-black">{achievements.length}</p>
             </div>
-            <div className="bg-primary text-bg-dark brutal-border-thin rounded-xl px-2.5 py-2">
+            <div className="imperial-deep rounded-xl px-2.5 py-2">
               <p className="text-[9px] font-bold">{isZh ? '完成度' : 'Progress'}</p>
               <p className="text-sm font-black">{progress}%</p>
             </div>
           </div>
-          <div className="mt-3 h-3 bg-white/10 brutal-border-thin rounded-full overflow-hidden p-[1px]">
-            <div className="h-full rounded-full bg-gradient-to-r from-primary to-accent" style={{ width: `${progress}%` }} />
+          <div className="mt-3 imperial-progress-track">
+            <div className="imperial-progress-fill" style={{ width: `${progress}%` }} />
           </div>
         </div>
       </div>
@@ -88,10 +87,10 @@ const Achievements: React.FC<AchievementsProps> = ({ locale }) => {
         {achievements.map((item) => (
           <div
             key={item.name}
-            className={`p-4 rounded-2xl border ${item.unlocked ? 'bg-primary/95 text-bg-dark border-primary/45' : 'neo-card text-black border-black/8'} hover-lift`}
+            className={`p-4 rounded-2xl border ${item.unlocked ? 'bg-primary/95 text-white border-primary/45' : 'neo-card text-white border-accent/20'} hover-lift`}
           >
             <div className="flex items-center justify-between gap-2">
-              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${item.unlocked ? 'bg-bg-dark text-primary' : 'bg-black/10 text-black/60'}`}>
+              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${item.unlocked ? 'imperial-deep text-accent' : 'bg-black/10 text-white/60'}`}>
                 {item.tier}
               </span>
               <span className="text-[10px] font-black opacity-70">{item.score}</span>

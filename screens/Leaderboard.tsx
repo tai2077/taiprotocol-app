@@ -92,23 +92,20 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ rank, walletAddress, locale }
 
   return (
     <div className="page-view">
-      <div className="neo-card-dark p-6 relative overflow-hidden">
-        <div className="pointer-events-none absolute -top-12 -right-10 h-44 w-44 rounded-full bg-primary/18 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-16 -left-8 h-40 w-40 rounded-full bg-accent/18 blur-3xl" />
-
-        <div className="relative z-10">
-          <p className="section-kicker text-accent">{isZh ? '竞技榜单' : 'Rankings'}</p>
-          <p className="text-2xl font-black tracking-tight mt-1">{tabTitle}</p>
+      <div className="hero-card p-6">
+        <div>
+          <p className="section-kicker">{isZh ? '竞技榜单' : 'Rankings'}</p>
+          <p className="text-3xl font-black tracking-tight mt-1">{tabTitle}</p>
           <div className="mt-3 grid grid-cols-3 gap-2">
-            <div className="bg-white/10 brutal-border-thin rounded-xl px-2.5 py-2">
+            <div className="imperial-data rounded-xl px-2.5 py-2">
               <p className="text-[9px] font-bold text-white/60">{isZh ? '我的排名' : 'My Rank'}</p>
               <p className="text-sm font-black">#{rank || '-'}</p>
             </div>
-            <div className="bg-white/10 brutal-border-thin rounded-xl px-2.5 py-2">
+            <div className="imperial-data rounded-xl px-2.5 py-2">
               <p className="text-[9px] font-bold text-white/60">{isZh ? '上榜人数' : 'Entries'}</p>
               <p className="text-sm font-black">{loading ? '...' : currentBoard.length}</p>
             </div>
-            <div className="bg-primary text-bg-dark brutal-border-thin rounded-xl px-2.5 py-2">
+            <div className="imperial-deep rounded-xl px-2.5 py-2">
               <p className="text-[9px] font-bold">{isZh ? '当前身份' : 'Identity'}</p>
               <p className="text-sm font-black truncate">{walletAddress ? (isZh ? '已连接' : 'Connected') : (isZh ? '游客' : 'Guest')}</p>
             </div>
@@ -118,32 +115,54 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ rank, walletAddress, locale }
 
       <div className="grid grid-cols-3 gap-2">
         <button
-          className={`py-2.5 rounded-xl brutal-border-thin text-xs font-black transition ${tab === 'invite' ? 'bg-bg-dark text-white' : 'bg-white text-black'}`}
+          type="button"
+          className={`py-2.5 rounded-xl border text-xs font-black transition ${
+            tab === 'invite'
+              ? 'imperial-deep text-accent border-accent/45'
+              : 'imperial-data text-white border-[#cfac56]/20 hover:opacity-90'
+          }`}
           onClick={() => setTab('invite')}
         >
           {isZh ? '邀请榜' : 'Invite'}
         </button>
         <button
-          className={`py-2.5 rounded-xl brutal-border-thin text-xs font-black transition ${tab === 'goal' ? 'bg-bg-dark text-white' : 'bg-white text-black'}`}
+          type="button"
+          className={`py-2.5 rounded-xl border text-xs font-black transition ${
+            tab === 'goal'
+              ? 'imperial-deep text-accent border-accent/45'
+              : 'imperial-data text-white border-[#cfac56]/20 hover:opacity-90'
+          }`}
           onClick={() => setTab('goal')}
         >
           {isZh ? '达标榜' : 'Goal'}
         </button>
         <button
-          className={`py-2.5 rounded-xl brutal-border-thin text-xs font-black transition ${tab === 'diamond' ? 'bg-bg-dark text-white' : 'bg-white text-black'}`}
+          type="button"
+          className={`py-2.5 rounded-xl border text-xs font-black transition ${
+            tab === 'diamond'
+              ? 'imperial-deep text-accent border-accent/45'
+              : 'imperial-data text-white border-[#cfac56]/20 hover:opacity-90'
+          }`}
           onClick={() => setTab('diamond')}
         >
           {isZh ? '钻石手榜' : 'Diamond'}
         </button>
       </div>
 
-      {loading && <p className="text-xs font-black text-black/55">{isZh ? '加载中...' : 'Loading...'}</p>}
-      {!loading && currentBoard.length === 0 && <p className="text-xs font-black text-black/55">{isZh ? '暂无数据' : 'No data yet'}</p>}
+      {loading && <p className="text-xs font-black text-white/55">{isZh ? '加载中...' : 'Loading...'}</p>}
+      {!loading && currentBoard.length === 0 && <p className="text-xs font-black text-white/55">{isZh ? '暂无数据' : 'No data yet'}</p>}
 
       {!loading && top3.length > 0 && (
         <div className="grid grid-cols-3 gap-2">
           {top3.map((entry, idx) => (
-            <div key={`top-${entry.name}-${idx}`} className={`p-3 rounded-2xl border text-center ${idx === 0 ? 'bg-primary/95 text-bg-dark border-primary/45' : 'neo-card text-black'}`}>
+            <div
+              key={`top-${entry.name}-${idx}`}
+              className={`p-3 rounded-2xl border text-center ${
+                idx === 0
+                  ? 'bg-gradient-to-b from-[#f2d98a] via-[#d3b163] to-[#9c722c] text-[#2d1a03] border-[#f2d98a]/80 shadow-[0_14px_26px_rgba(207,172,86,0.26)]'
+                  : 'neo-card text-white'
+              }`}
+            >
               <p className="text-[10px] font-black uppercase">#{entry.rank}</p>
               <p className="text-xs font-black mt-1 truncate">{entry.name}</p>
               <p className="text-[10px] font-bold mt-1 opacity-70">{entry.value}</p>
@@ -159,12 +178,12 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ rank, walletAddress, locale }
             return (
               <div
                 key={`${tab}-${entry.name}-${idx}`}
-                className={`p-3.5 rounded-xl brutal-border-thin flex justify-between items-center text-sm ${mine ? 'bg-primary/15 border-primary/45' : 'bg-white'}`}
+                className={`p-3.5 rounded-xl brutal-border-thin flex justify-between items-center text-sm ${mine ? 'bg-primary/15 border-primary/45' : 'imperial-data'}`}
               >
                 <span className="font-black">
                   #{entry.rank} {entry.name}
                 </span>
-                <span className="font-black text-black/70">{entry.value}</span>
+                <span className="font-black text-white/70">{entry.value}</span>
               </div>
             );
           })}

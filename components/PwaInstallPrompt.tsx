@@ -111,11 +111,11 @@ const PwaInstallPrompt: React.FC<{ locale: Locale }> = ({ locale }) => {
 
   return (
     <div className="fixed left-1/2 -translate-x-1/2 w-[94%] max-w-[430px] z-[64]" style={{ bottom: 'calc(var(--safe-bottom) + 6rem)' }}>
-      <div className="neo-card p-3.5 border border-primary/35 shadow-brutal-lg">
+      <div className="neo-card p-3.5">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="section-kicker">{text.title}</p>
-            <p className="text-[11px] font-black text-black/80 leading-snug">
+            <p className="text-[11px] font-black text-white/80 leading-snug">
               {deferredPrompt
                 ? text.subtitlePrompt
                 : text.subtitleManual}
@@ -141,9 +141,9 @@ const PwaInstallPrompt: React.FC<{ locale: Locale }> = ({ locale }) => {
         </div>
 
         {showIosGuide && (
-          <div className="mt-2 rounded-xl border border-black/10 bg-white px-3 py-2">
-            <p className="text-[11px] font-bold text-black/70">{text.step1}</p>
-            <p className="text-[11px] font-bold text-black/70">{text.step2}</p>
+          <div className="mt-2 rounded-xl imperial-data px-3 py-2">
+            <p className="text-[11px] font-bold text-white/70">{text.step1}</p>
+            <p className="text-[11px] font-bold text-white/70">{text.step2}</p>
           </div>
         )}
       </div>

@@ -17,6 +17,8 @@ const Missions = lazy(() => import('./screens/Missions'));
 const Invite = lazy(() => import('./screens/Invite'));
 const Shop = lazy(() => import('./screens/Shop'));
 const Rewards = lazy(() => import('./screens/Rewards'));
+const Unlocks = lazy(() => import('./screens/Unlocks'));
+const FixedStake = lazy(() => import('./screens/FixedStake'));
 const Leaderboard = lazy(() => import('./screens/Leaderboard'));
 const Achievements = lazy(() => import('./screens/Achievements'));
 const Profile = lazy(() => import('./screens/Profile'));
@@ -27,6 +29,7 @@ const INITIAL_STATS: UserStats = {
   taiBalance: 0,
   lockedTai: 0,
   pendingTai: 0,
+  points: 0,
   wealthGoalUsd: 1_000_000,
   onchainTai: 0,
 };
@@ -77,6 +80,12 @@ function toFriendlyAddress(address: string | null): string | null {
   } catch {
     return null;
   }
+}
+
+function resolvePointsField(input: unknown): number {
+  if (!input || typeof input !== 'object') return 0;
+  const source = input as { pointsTotal?: unknown; pointsBalance?: unknown; score?: unknown };
+  return toTaiNumber(source.pointsTotal ?? source.pointsBalance ?? source.score ?? 0);
 }
 
 const App: React.FC = () => {
@@ -156,12 +165,16 @@ const App: React.FC = () => {
       const pendingByPortfolio = toTaiNumber(portfolio?.totalPending || 0);
       const pendingByClaimable = claimable ? toTaiNumber(claimable.pendingTotalTai) : 0;
       const pendingTai = pendingByClaimable > 0 ? pendingByClaimable : pendingByPortfolio;
+      const pointsByClaimable = resolvePointsField(claimable);
+      const pointsByPortfolio = resolvePointsField(portfolio);
+      const points = Math.max(Math.round(pointsByClaimable || pointsByPortfolio || pendingTai), 0);
 
       setStats((prev) => ({
         ...prev,
         tonBalance,
         taiBalance,
         pendingTai,
+        points,
         onchainTai: taiBalance + prev.lockedTai,
       }));
     })();
@@ -374,42 +387,40 @@ const App: React.FC = () => {
     ({
       zh: {
         '/home': '通往财富自由之路',
-        '/sale': '补给',
-        '/deposit': '存款',
-        '/invite': '邀请',
-        '/rewards': '奖励',
+        '/sale': '补给中心',
+        '/deposit': '资产',
+        '/stake': '固定质押',
+        '/invite': '积分 · 邀请',
+        '/rewards': '积分',
+        '/unlocks': '积分 · 解锁',
         '/leaderboard': '榜单',
-        '/missions': '任务',
+        '/missions': '积分 · 任务',
         '/achievements': '成就',
         '/profile': '我的',
       },
       en: {
         '/home': 'Road to Financial Freedom',
-        '/sale': 'Shop',
-        '/deposit': 'Deposit',
-        '/invite': 'Invite',
-        '/rewards': 'Rewards',
+        '/sale': 'Supply Center',
+        '/deposit': 'Assets',
+        '/stake': 'Fixed Stake',
+        '/invite': 'Points · Invite',
+        '/rewards': 'Points',
+        '/unlocks': 'Points · Unlocks',
         '/leaderboard': 'Leaderboard',
-        '/missions': 'Missions',
+        '/missions': 'Points · Missions',
         '/achievements': 'Achievements',
         '/profile': 'Profile',
       },
-    } as const)[locale][location.pathname] || (locale === 'zh' ? '泰式协议' : 'TAI Protocol');
+    } as const)[locale][location.pathname] || (locale === 'zh' ? 'TAI 协议' : 'TAI Protocol');
 
   useEffect(() => {
-    const brand = locale === 'zh' ? '泰式协议' : 'TAI Protocol';
+    const brand = locale === 'zh' ? 'TAI 协议' : 'TAI Protocol';
     document.title = routeTitle === brand ? brand : `${routeTitle} | ${brand}`;
   }, [locale, routeTitle]);
 
   return (
-    <div className="min-h-screen app-atmosphere flex justify-center px-3 sm:px-5">
-      <div className={`app-shell-frame w-full max-w-[520px] min-h-screen flex flex-col relative overflow-hidden ${navMode === 'top-right' ? 'nav-mode-top-right' : ''}`}>
-        <div className="pointer-events-none absolute inset-0 -z-10">
-          <div className="absolute -top-24 -left-24 h-64 w-64 rounded-full bg-primary/20 blur-[90px]" />
-          <div className="absolute top-1/4 -right-24 h-64 w-64 rounded-full bg-accent/20 blur-[95px]" />
-          <div className="absolute inset-x-0 bottom-[-140px] mx-auto h-60 w-[120%] rounded-full bg-primary/10 blur-[110px]" />
-          <div className="app-shell-noise" />
-        </div>
+    <div className="min-h-screen app-atmosphere flex justify-center px-0 sm:px-4">
+      <div className={`app-shell-frame w-full max-w-[520px] min-h-screen flex flex-col relative ${navMode === 'top-right' ? 'nav-mode-top-right' : ''}`}>
         {showNav && (
           <TopBar
             title={routeTitle}
@@ -444,8 +455,10 @@ const App: React.FC = () => {
                 />
               }
             />
+            <Route path="/stake" element={<FixedStake walletAddress={walletAddress} locale={locale} />} />
             <Route path="/invite" element={<Invite walletAddress={walletAddress} locale={locale} />} />
-            <Route path="/rewards" element={<Rewards walletAddress={walletAddress} locale={locale} />} />
+            <Route path="/rewards" element={<Rewards walletAddress={walletAddress} locale={locale} points={stats.points} />} />
+            <Route path="/unlocks" element={<Unlocks walletAddress={walletAddress} locale={locale} points={stats.points} />} />
             <Route path="/leaderboard" element={<Leaderboard rank={stats.rank ?? 0} walletAddress={walletAddress} locale={locale} />} />
             <Route path="/missions" element={<Missions stats={stats} goals={depositGoals} walletAddress={walletAddress} locale={locale} />} />
             <Route path="/achievements" element={<Achievements locale={locale} />} />

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { DepositGoal } from '../types';
 import { api } from '../lib/api';
@@ -75,6 +76,9 @@ const Vault: React.FC<VaultProps> = ({ goals, availableTai, onCreateGoal, onTopU
     [targetUsd, taiPriceUsd]
   );
   const totalLockedTai = useMemo(() => activeGoals.reduce((sum, g) => sum + g.depositedTai, 0), [activeGoals]);
+  const totalTaiForRatio = Math.max(availableTai + totalLockedTai, 1);
+  const availableRatio = Math.max(0, Math.min(100, (availableTai / totalTaiForRatio) * 100));
+  const lockedRatio = Math.max(0, 100 - availableRatio);
 
   const createGoal = async () => {
     if (!walletAddress) return tonConnectUI.openModal();
@@ -237,48 +241,93 @@ const Vault: React.FC<VaultProps> = ({ goals, availableTai, onCreateGoal, onTopU
 
   return (
     <div className="page-view">
-      <div className="neo-card-dark p-6 relative overflow-hidden">
-        <div className="pointer-events-none absolute -top-10 -right-10 h-36 w-36 rounded-full bg-primary/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-14 -left-8 h-32 w-32 rounded-full bg-accent/18 blur-3xl" />
+      <div className="hero-card p-6">
         <div className="flex items-start justify-between gap-3">
-          <div className="relative z-10">
-            <p className="section-kicker text-accent">{isZh ? '存款游戏引擎' : 'Deposit Engine'}</p>
-            <h2 className="text-2xl font-black tracking-tight">{isZh ? '目标锁定仓' : 'Goal Vault'}</h2>
+          <div>
+            <p className="section-kicker">{isZh ? '存款游戏引擎' : 'Deposit Engine'}</p>
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight">{isZh ? '存款目标仓' : 'Deposit Goals Vault'}</h2>
           </div>
-          <div className="bg-primary text-black brutal-border-thin rounded-xl px-3 py-2 text-center min-w-[78px] relative z-10">
+          <div className="imperial-deep rounded-xl px-3 py-2 text-center min-w-[78px]">
             <p className="text-[10px] font-black">{isZh ? '槽位' : 'Slots'}</p>
             <p className="text-lg font-black">{activeGoals.length}/3</p>
           </div>
         </div>
-        <p className="text-xs font-bold text-white/70 mt-2 relative z-10">
-          {isZh ? '目标金额固定不变，TAI 需求随价格波动。未达标不可领取。' : 'Goal amount is fixed. Required TAI changes with price. Claim is blocked until target is reached.'}
+        <p className="text-xs font-bold text-white/60 mt-2">
+          {isZh ? '本页用于创建与管理存款目标。' : 'This page is for creating and managing deposit goals.'}
         </p>
-        <div className="mt-3 grid grid-cols-2 gap-2 relative z-10">
-          <div className="bg-white/10 brutal-border-thin rounded-xl px-3 py-2">
-            <p className="text-[10px] font-bold text-white/65">{isZh ? '可用 TAI' : 'Available TAI'}</p>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className="imperial-data rounded-xl px-3 py-2">
+            <p className="text-[10px] font-bold text-white/60">{isZh ? '可用 TAI' : 'Available TAI'}</p>
             <p className="text-sm font-black">{formatTai(availableTai, locale)}</p>
           </div>
-          <div className="bg-white/10 brutal-border-thin rounded-xl px-3 py-2">
-            <p className="text-[10px] font-bold text-white/65">{isZh ? '已锁定' : 'Locked'}</p>
+          <div className="imperial-data rounded-xl px-3 py-2">
+            <p className="text-[10px] font-bold text-white/60">{isZh ? '已锁定' : 'Locked'}</p>
             <p className="text-sm font-black">{formatTai(totalLockedTai, locale)}</p>
           </div>
         </div>
-        <div className="mt-3 space-y-1 text-[11px] font-bold text-white/75 relative z-10">
-          <p>{isZh ? '规则 1：每个用户最多同时持有 3 个存款目标' : 'Rule 1: Maximum 3 active goals per user'}</p>
-          <p>{isZh ? '规则 2：创建后不可修改目标金额，可追加补存' : 'Rule 2: Goal amount is immutable after create; top-up is allowed'}</p>
-          <p>{isZh ? '规则 3：达标后一次性领取，未达标不可领取' : 'Rule 3: Claim once when target is reached'}</p>
+        <div className="mt-2.5">
+          <div className="h-2 rounded-full overflow-hidden bg-[#0a0a0a] border border-[rgba(207,172,86,0.15)]">
+            <div className="h-full flex">
+              <div
+                className="h-full"
+                style={{ width: `${availableRatio}%`, background: 'linear-gradient(90deg, #cfac56 0%, #a68b3d 100%)' }}
+              />
+              <div
+                className="h-full"
+                style={{ width: `${lockedRatio}%`, background: 'linear-gradient(90deg, #c8102e 0%, #6b0818 100%)' }}
+              />
+            </div>
+          </div>
+          <div className="flex justify-between text-[9px] font-bold text-white/55 mt-1">
+            <span>{isZh ? '可用' : 'Available'} {availableRatio.toFixed(0)}%</span>
+            <span>{isZh ? '锁定' : 'Locked'} {lockedRatio.toFixed(0)}%</span>
+          </div>
         </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <span className="imperial-chip imperial-chip-muted">{isZh ? '最多 3 个目标' : 'Max 3 goals'}</span>
+          <span className="imperial-chip imperial-chip-muted">{isZh ? '支持追加补存' : 'Top-up enabled'}</span>
+          <span className="imperial-chip imperial-chip-muted">{isZh ? '达标即可领取' : 'Claim when reached'}</span>
+        </div>
+      </div>
+
+      <div className="neo-card p-4">
+        <p className="section-kicker">{isZh ? '质押模式' : 'Staking Mode'}</p>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <div className="imperial-deep text-white rounded-xl px-3 py-2">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-black">{isZh ? '固定质押' : 'Fixed Stake'}</p>
+              <span className="imperial-chip imperial-chip-primary">{isZh ? '已启用' : 'Enabled'}</span>
+            </div>
+            <p className="text-[10px] font-bold text-white/70 mt-1">
+              {isZh ? '固定质押窗口由合约统一控制（部署后 90 天）' : 'Fixed stake window is controlled globally by contract (90 days after deploy).'}
+            </p>
+          </div>
+          <div className="imperial-data rounded-xl px-3 py-2">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-black">{isZh ? '灵活质押' : 'Flexible Stake'}</p>
+              <span className="imperial-chip imperial-chip-muted">
+                {isZh ? '暂停' : 'Paused'}
+              </span>
+            </div>
+            <p className="text-[10px] font-bold text-white/60 mt-1">
+              {isZh ? '当前版本不开放灵活质押入口。' : 'Flexible stake entry is temporarily disabled.'}
+            </p>
+          </div>
+        </div>
+        <Link to="/stake" className="mt-3 inline-flex w-full tai-btn tai-btn-soft hover-lift">
+          {isZh ? '进入固定质押' : 'Open Fixed Stake'}
+        </Link>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="neo-card p-4">
-          <p className="section-kicker">{isZh ? '当前价格' : 'Current Price'}</p>
-          <p className="text-xl font-black mt-1">{priceLoading ? (isZh ? '读取中...' : 'Loading...') : formatUsdPerTai(taiPriceUsd, locale)}</p>
+          <p className="section-kicker">{isZh ? '当前价格（USDT/TAI）' : 'Current Price (USDT/TAI)'}</p>
+          <p className="text-xl font-black mt-1 number-display">{priceLoading ? (isZh ? '读取中...' : 'Loading...') : formatUsdPerTai(taiPriceUsd, locale)}</p>
           <p className="text-[10px] font-bold opacity-70 mt-1">{isZh ? '15 秒刷新' : 'Refreshes every 15s'}</p>
         </div>
         <div className="neo-card p-4">
-          <p className="section-kicker">{isZh ? '达标所需' : 'Need for Target'}</p>
-          <p className="text-xl font-black mt-1">{formatTai(requiredTaiNow, locale)}</p>
+          <p className="section-kicker">{isZh ? '达标所需（TAI）' : 'Required (TAI)'}</p>
+          <p className="text-xl font-black mt-1 number-display">{formatTai(requiredTaiNow, locale)}</p>
           <p className="text-[10px] font-bold opacity-70 mt-1">{isZh ? '当前选择目标' : 'Selected target'} {formatUsd(targetUsd, locale)}</p>
         </div>
       </div>
@@ -289,9 +338,30 @@ const Vault: React.FC<VaultProps> = ({ goals, availableTai, onCreateGoal, onTopU
           {PRESET_TARGETS.map((item) => (
             <button
               key={item}
-              className={`px-3 py-2 brutal-border-thin rounded-xl font-black text-xs ${targetUsd === item ? 'bg-bg-dark text-primary border-primary/45' : 'bg-white text-black'}`}
+              className={`px-3 py-2 rounded-xl font-black text-xs relative overflow-hidden ${targetUsd === item ? 'imperial-deep text-accent' : 'imperial-data text-white'}`}
+              style={
+                targetUsd === item
+                  ? {
+                    borderColor: 'rgba(207,172,86,0.42)',
+                    background:
+                      'linear-gradient(180deg, rgba(200,16,46,0.15), transparent 58%), linear-gradient(180deg, #1a0a0d, #0d0d0d)',
+                  }
+                  : undefined
+              }
               onClick={() => setTargetUsd(item)}
             >
+              {targetUsd === item && (
+                <span
+                  aria-hidden="true"
+                  className="absolute top-0 left-0 right-0"
+                  style={{
+                    left: '20%',
+                    right: '20%',
+                    height: '1px',
+                    background: 'linear-gradient(90deg, transparent, rgba(207,172,86,0.5), transparent)',
+                  }}
+                />
+              )}
               {formatUsd(item, locale)}
             </button>
           ))}
@@ -299,16 +369,16 @@ const Vault: React.FC<VaultProps> = ({ goals, availableTai, onCreateGoal, onTopU
 
         <label className="text-[10px] font-black">{isZh ? '自定义目标（USD）' : 'Custom Target (USD)'}</label>
         <input
-          className="w-full brutal-border-thin bg-white p-3 font-black text-xl rounded-xl"
+          className="w-full imperial-data p-3 font-black text-xl rounded-xl number-display"
           type="number"
           min={1000}
           value={targetUsd}
           onChange={(e) => setTargetUsd(Number(e.target.value || 0))}
         />
 
-        <div className="bg-primary/10 border border-primary/25 p-3 rounded-xl">
+        <div className="bg-primary/10 p-3 rounded-xl">
           <p className="text-[10px] font-black">{isZh ? '按当前价格需锁定' : 'Required at Current Price'}</p>
-          <p className="text-xl font-black">{formatTai(requiredTaiNow, locale)}</p>
+          <p className="text-xl font-black number-display">{formatTai(requiredTaiNow, locale)}</p>
           <p className="text-[10px] font-bold opacity-70 mt-1">
             {isZh ? `目标固定为 ${formatUsd(targetUsd, locale)}，创建后不可修改` : `Goal is fixed at ${formatUsd(targetUsd, locale)} after creation`}
           </p>
@@ -320,46 +390,70 @@ const Vault: React.FC<VaultProps> = ({ goals, availableTai, onCreateGoal, onTopU
       </div>
 
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
-        <div className="px-3 py-1.5 rounded-full bg-bg-dark text-white text-[10px] font-black whitespace-nowrap">{isZh ? '全部目标' : 'All Goals'} · {goals.length}</div>
-        <div className="px-3 py-1.5 rounded-full bg-white brutal-border-thin text-[10px] font-black whitespace-nowrap">{isZh ? '进行中' : 'Active'} · {activeGoals.length}</div>
-        <div className="px-3 py-1.5 rounded-full bg-white brutal-border-thin text-[10px] font-black whitespace-nowrap">{isZh ? '已领取' : 'Claimed'} · {goals.length - activeGoals.length}</div>
+        <div className="px-3 py-1.5 rounded-full imperial-deep text-white text-[10px] font-black whitespace-nowrap">{isZh ? '全部目标' : 'All Goals'} · {goals.length}</div>
+        <div className="px-3 py-1.5 rounded-full imperial-data text-[10px] font-black whitespace-nowrap">{isZh ? '进行中' : 'Active'} · {activeGoals.length}</div>
+        <div className="px-3 py-1.5 rounded-full imperial-data text-[10px] font-black whitespace-nowrap">{isZh ? '已领取' : 'Claimed'} · {goals.length - activeGoals.length}</div>
       </div>
 
       <div className="space-y-3">
-        {goals.length === 0 && <p className="text-xs font-black text-black/60">{isZh ? '暂无存款目标' : 'No deposit goals yet'}</p>}
+        {goals.length === 0 && <p className="text-xs font-black text-white/60">{isZh ? '暂无存款目标' : 'No deposit goals yet'}</p>}
         {goals.map((goal, idx) => {
           const currentValue = goal.depositedTai * taiPriceUsd;
           const reached = currentValue >= goal.targetUsd;
+          const claimable = reached;
           const progress = Math.min(100, Math.round((currentValue / Math.max(goal.targetUsd, 1)) * 100));
           const needTaiAtCurrentPrice = Math.max(1, Math.ceil(goal.targetUsd / Math.max(taiPriceUsd, 0.000000001)));
           const taiGap = Math.max(0, needTaiAtCurrentPrice - goal.depositedTai);
           const topUpAmount = Math.min(taiGap, availableTai);
+          const goalStatusBarColor = goal.claimed
+            ? '#333'
+            : claimable
+              ? 'linear-gradient(180deg, #f6df9a 0%, #c8102e 100%)'
+              : 'linear-gradient(180deg, #333 0%, #1a1a1a 100%)';
 
           return (
-            <div key={goal.id} className="neo-card p-4 hover-lift">
+            <div key={goal.id} className="neo-card p-4 hover-lift relative overflow-hidden">
+              <span
+                aria-hidden="true"
+                className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
+                style={{ background: goalStatusBarColor }}
+              />
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="section-kicker">{isZh ? '目标' : 'Goal'} #{idx + 1}</p>
                   <p className="text-lg font-black">{formatUsd(goal.targetUsd, locale)}</p>
                 </div>
-                <span className={`px-2.5 py-1 text-[10px] font-black rounded-full brutal-border-thin ${goal.claimed ? 'bg-bg-dark text-white' : reached ? 'bg-primary text-black border-primary/50' : 'bg-white text-black'}`}>
-                  {goal.claimed ? (isZh ? '已领取' : 'Claimed') : reached ? (isZh ? '可领取' : 'Claimable') : isZh ? '未达标' : 'Not Reached'}
+                <span className={`imperial-chip ${
+                  goal.claimed
+                    ? 'imperial-chip-muted'
+                    : claimable
+                      ? 'imperial-chip-primary'
+                      : 'imperial-chip-muted'
+                }`}>
+                  {goal.claimed
+                    ? (isZh ? '已领取' : 'Claimed')
+                    : claimable
+                      ? (isZh ? '可领取' : 'Claimable')
+                      : isZh
+                        ? '未达标'
+                        : 'Not Reached'}
                 </span>
               </div>
 
-              <div className="mt-2 space-y-1 text-[11px] font-bold text-black/75">
-                <p>{isZh ? '已锁定：' : 'Locked: '}{formatTai(goal.depositedTai, locale)}</p>
-                <p>{isZh ? '当前估值：' : 'Current Value: '}{formatUsd(currentValue, locale, 2)}</p>
-                <p>{isZh ? '当前达标所需：' : 'Needed at Current Price: '}{formatTai(needTaiAtCurrentPrice, locale)}</p>
-                {!reached && <p>{isZh ? '按当前价格还差：' : 'Gap at Current Price: '}{formatTai(taiGap, locale)}</p>}
-                <p>{isZh ? '创建时间：' : 'Created: '}{new Date(goal.createdAt).toLocaleString()}</p>
+              <div className="mt-2 space-y-1 text-[11px] font-bold text-white/75">
+                <p>{isZh ? '已锁定：' : 'Locked: '}<span className="number-display">{formatTai(goal.depositedTai, locale)}</span></p>
+                <p>{isZh ? '当前估值：' : 'Current Value: '}<span className="number-display">{formatUsd(currentValue, locale, 2)}</span></p>
+                <p>{isZh ? '当前达标所需：' : 'Needed at Current Price: '}<span className="number-display">{formatTai(needTaiAtCurrentPrice, locale)}</span></p>
+                {!reached && <p>{isZh ? '按当前价格还差：' : 'Gap at Current Price: '}<span className="number-display">{formatTai(taiGap, locale)}</span></p>}
+                <p>{isZh ? '领取条件：当前估值达到目标金额' : 'Claim condition: current value reaches target amount'}</p>
+                <p>{isZh ? '创建时间：' : 'Created: '}{new Date(goal.createdAt).toLocaleString(numberLocale)}</p>
               </div>
 
               <div className="mt-3">
-                <div className="h-3 bg-black/10 brutal-border-thin rounded-full overflow-hidden p-[1px]">
-                  <div className="h-full bg-gradient-to-r from-accent to-primary transition-all duration-500 rounded-full" style={{ width: `${progress}%` }}></div>
+                <div className="imperial-progress-track">
+                  <div className="imperial-progress-fill" style={{ width: `${progress}%` }}></div>
                 </div>
-                <p className="text-[10px] font-black mt-1">{isZh ? '目标进度' : 'Progress'} {progress}%</p>
+                <p className="text-[10px] font-black mt-1 number-display">{isZh ? '目标进度' : 'Progress'} {progress}%</p>
               </div>
 
               <div className="mt-3 grid grid-cols-2 gap-2">
@@ -380,10 +474,16 @@ const Vault: React.FC<VaultProps> = ({ goals, availableTai, onCreateGoal, onTopU
                 </button>
                 <button
                   className="w-full tai-btn tai-btn-dark disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={goal.claimed || !reached}
+                  disabled={goal.claimed || !claimable}
                   onClick={() => claimGoal(goal)}
                 >
-                  {goal.claimed ? (isZh ? '已领取' : 'Claimed') : reached ? (isZh ? '领取存款' : 'Claim Deposit') : isZh ? '未达标不可领取' : 'Not Reached'}
+                  {goal.claimed
+                    ? (isZh ? '已领取' : 'Claimed')
+                    : claimable
+                      ? (isZh ? '领取存款' : 'Claim Deposit')
+                      : isZh
+                        ? '未达标不可领取'
+                        : 'Not Reached'}
                 </button>
               </div>
             </div>
