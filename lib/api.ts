@@ -66,6 +66,23 @@ export interface SaleV2ClaimTaskRewardResponse {
   };
 }
 
+export interface MissionProgressResponse {
+  ruleVersion?: string;
+  walletAddress?: string;
+  taskSaveRatioBp: number;
+  source: 'missions' | 'claimable';
+  progress: {
+    bindGroupDone: boolean;
+    signInDays: number;
+    sign7Done: boolean;
+    sign21Done: boolean;
+    onboardingDone: boolean;
+    governanceDone: boolean;
+    fixedStakeActive: boolean;
+    fixedStakeMatured: boolean;
+  };
+}
+
 export interface RecentPurchase {
   address: string;
   tier: number;
@@ -386,6 +403,49 @@ function normalizeClaimableResponse(rawResponse: unknown): ClaimableResponse {
   };
 }
 
+function normalizeMissionProgressResponse(rawResponse: unknown): MissionProgressResponse {
+  const root = toObject(rawResponse);
+  const raw = toObject(root.data || root);
+  const progressRaw = toObject(raw.progress);
+
+  return {
+    ruleVersion: raw.ruleVersion ? String(raw.ruleVersion) : undefined,
+    walletAddress: raw.walletAddress ? String(raw.walletAddress) : undefined,
+    taskSaveRatioBp: toNumber(raw.taskSaveRatioBp, 0),
+    source: 'missions',
+    progress: {
+      bindGroupDone: Boolean(progressRaw.bind_group_done ?? progressRaw.bindGroupDone),
+      signInDays: toNumber(progressRaw.sign_in_days ?? progressRaw.signInDays, 0),
+      sign7Done: Boolean(progressRaw.sign7_done ?? progressRaw.sign7Done),
+      sign21Done: Boolean(progressRaw.sign21_done ?? progressRaw.sign21Done),
+      onboardingDone: Boolean(progressRaw.onboarding_done ?? progressRaw.onboardingDone),
+      governanceDone: Boolean(progressRaw.governance_done ?? progressRaw.governanceDone),
+      fixedStakeActive: Boolean(progressRaw.save_basic_done ?? progressRaw.saveBasicDone),
+      fixedStakeMatured: Boolean(progressRaw.save_advanced_done ?? progressRaw.saveAdvancedDone),
+    },
+  };
+}
+
+function missionProgressFromClaimable(claimable: ClaimableResponse): MissionProgressResponse {
+  const task = claimable.taskSaveProgress;
+  return {
+    ruleVersion: claimable.ruleVersion,
+    walletAddress: undefined,
+    taskSaveRatioBp: toNumber(claimable.ratios?.taskSaveRatioBp, 0),
+    source: 'claimable',
+    progress: {
+      bindGroupDone: Boolean(task?.bindGroupDone),
+      signInDays: toNumber(task?.signInDays, 0),
+      sign7Done: Boolean(task?.sign7Done),
+      sign21Done: Boolean(task?.sign21Done),
+      onboardingDone: Boolean(task?.onboardingDone),
+      governanceDone: Boolean(task?.governanceDone),
+      fixedStakeActive: Boolean(task?.saveBasicDone),
+      fixedStakeMatured: Boolean(task?.saveAdvancedDone),
+    },
+  };
+}
+
 function normalizeRecentPurchasesResponse(rawResponse: unknown): RecentPurchase[] {
   const root = toObject(rawResponse);
   const rows = Array.isArray(root.purchases)
@@ -484,7 +544,16 @@ export const api = {
   getSaleRules: () =>
     requestJson<any>(['/api/sale-v2/rules/active', '/sale-v2/rules/active']),
   getMissionProgress: (address: string) =>
-    requestJson<any>([`/api/sale-v2/missions/progress/${address}`, `/sale-v2/missions/progress/${address}`]),
+    requestWithFallback<MissionProgressResponse>([
+      () =>
+        requestJson<any>([`/api/sale-v2/missions/progress/${address}`, `/sale-v2/missions/progress/${address}`]).then((data) =>
+          normalizeMissionProgressResponse(data)
+        ),
+      () =>
+        requestJson<any>([`/api/sale-v2/claimable/${address}`, `/sale-v2/claimable/${address}`]).then((data) =>
+          missionProgressFromClaimable(normalizeClaimableResponse(data))
+        ),
+    ]),
   reportMissionProgress: (
     body: {
       walletAddress: string;

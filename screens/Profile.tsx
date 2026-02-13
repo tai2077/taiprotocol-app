@@ -15,9 +15,10 @@ const Profile: React.FC<ProfileProps> = ({ stats, walletAddress, locale }) => {
   const isZh = locale === 'zh';
   const [tonConnectUI] = useTonConnectUI();
 
+  const managedTai = Math.max(stats.taiBalance + stats.lockedTai, 1);
   const assetHealth = Math.max(
     0,
-    Math.min(100, Math.round((stats.onchainTai / Math.max(stats.onchainTai + stats.lockedTai, 1)) * 100))
+    Math.min(100, Math.round((stats.taiBalance / managedTai) * 100))
   );
   const rounds = [...DEFAULT_UNLOCK_ROUNDS].sort(
     (a, b) => new Date(a.unlockAt).getTime() - new Date(b.unlockAt).getTime()

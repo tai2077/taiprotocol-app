@@ -461,7 +461,10 @@ const App: React.FC = () => {
             <Route path="/unlocks" element={<Unlocks walletAddress={walletAddress} locale={locale} points={stats.points} />} />
             <Route path="/leaderboard" element={<Leaderboard rank={stats.rank ?? 0} walletAddress={walletAddress} locale={locale} />} />
             <Route path="/missions" element={<Missions stats={stats} goals={depositGoals} walletAddress={walletAddress} locale={locale} />} />
-            <Route path="/achievements" element={<Achievements locale={locale} />} />
+            <Route
+              path="/achievements"
+              element={<Achievements locale={locale} walletAddress={walletAddress} goals={depositGoals} points={stats.points} />}
+            />
             <Route path="/profile" element={<Profile stats={stats} walletAddress={walletAddress} locale={locale} />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

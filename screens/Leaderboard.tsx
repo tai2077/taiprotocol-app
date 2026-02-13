@@ -53,33 +53,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ rank, walletAddress, locale }
     [list, isZh]
   );
 
-  const goalBoard = useMemo(
-    () =>
-      list.slice(0, 20).map((entry, idx) => {
-        const progress = Math.min(100, 12 + (entry.inviteCount || 0) * 6 + idx);
-        return {
-          rank: idx + 1,
-          name: shortAddressText(entry.address),
-          value: isZh ? `目标达成 ${progress}%` : `Goal ${progress}%`,
-        };
-      }),
-    [list, isZh]
-  );
-
-  const diamondBoard = useMemo(
-    () =>
-      list.slice(0, 20).map((entry, idx) => {
-        const days = 5 + (entry.inviteCount || 0) * 2 + idx;
-        return {
-          rank: idx + 1,
-          name: shortAddressText(entry.address),
-          value: isZh ? `${days} 天` : `${days} days`,
-        };
-      }),
-    [list, isZh]
-  );
-
-  const currentBoard = tab === 'invite' ? inviteBoard : tab === 'goal' ? goalBoard : diamondBoard;
+  const currentBoard = tab === 'invite' ? inviteBoard : [];
+  const comingSoon = tab !== 'invite';
   const top3 = currentBoard.slice(0, 3);
   const rest = currentBoard.slice(3);
   const currentUserName = walletAddress ? shortAddressText(walletAddress) : null;
@@ -103,7 +78,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ rank, walletAddress, locale }
             </div>
             <div className="imperial-data rounded-xl px-2.5 py-2">
               <p className="text-[9px] font-bold text-white/60">{isZh ? '上榜人数' : 'Entries'}</p>
-              <p className="text-sm font-black">{loading ? '...' : currentBoard.length}</p>
+              <p className="text-sm font-black">{comingSoon ? '-' : loading ? '...' : currentBoard.length}</p>
             </div>
             <div className="imperial-deep rounded-xl px-2.5 py-2">
               <p className="text-[9px] font-bold">{isZh ? '当前身份' : 'Identity'}</p>
@@ -149,10 +124,20 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ rank, walletAddress, locale }
         </button>
       </div>
 
-      {loading && <p className="text-xs font-black text-white/55">{isZh ? '加载中...' : 'Loading...'}</p>}
-      {!loading && currentBoard.length === 0 && <p className="text-xs font-black text-white/55">{isZh ? '暂无数据' : 'No data yet'}</p>}
+      {comingSoon && (
+        <div className="neo-card p-4 border border-[#cfac56]/35">
+          <p className="text-xs font-black text-white/70">
+            {isZh
+              ? '该榜单将接入真实链上/业务数据后上线，当前不展示伪排行。'
+              : 'This board will go live after real on-chain/business data is connected. No mock ranking is shown now.'}
+          </p>
+        </div>
+      )}
 
-      {!loading && top3.length > 0 && (
+      {!comingSoon && loading && <p className="text-xs font-black text-white/55">{isZh ? '加载中...' : 'Loading...'}</p>}
+      {!comingSoon && !loading && currentBoard.length === 0 && <p className="text-xs font-black text-white/55">{isZh ? '暂无数据' : 'No data yet'}</p>}
+
+      {!comingSoon && !loading && top3.length > 0 && (
         <div className="grid grid-cols-3 gap-2">
           {top3.map((entry, idx) => (
             <div
@@ -171,7 +156,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ rank, walletAddress, locale }
         </div>
       )}
 
-      {!loading && rest.length > 0 && (
+      {!comingSoon && !loading && rest.length > 0 && (
         <div className="space-y-2.5">
           {rest.map((entry, idx) => {
             const mine = Boolean(currentUserName && entry.name === currentUserName);
