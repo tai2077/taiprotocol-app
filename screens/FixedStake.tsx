@@ -230,24 +230,44 @@ const FixedStake: React.FC<FixedStakeProps> = ({ walletAddress, locale }) => {
               </div>
             </div>
             <div className="mt-3 grid grid-cols-3 gap-2">
+              {/*
+                Claim actions are guarded by both contract round gates and user-level claimable amounts
+                to avoid sending no-op transactions that still consume network fees.
+              */}
               <button
                 className="tai-btn tai-btn-soft disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => sendClaim('ClaimPrincipal')}
-                disabled={submitting || !overview || overview.currentRound < (overview.principalUnlockRound || 12)}
+                disabled={
+                  submitting
+                  || !overview
+                  || !userState?.hasStake
+                  || overview.currentRound < (overview.principalUnlockRound || 12)
+                  || (userState?.claimablePrincipalTai || 0) <= 0
+                }
               >
                 {isZh ? '领本金' : 'Principal'}
               </button>
               <button
                 className="tai-btn tai-btn-soft disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => sendClaim('ClaimReward')}
-                disabled={submitting || !overview?.allRoundsUnlocked}
+                disabled={
+                  submitting
+                  || !overview?.allRoundsUnlocked
+                  || !userState?.hasStake
+                  || (userState?.claimableRewardTai || 0) <= 0
+                }
               >
                 {isZh ? '领奖励' : 'Reward'}
               </button>
               <button
                 className="tai-btn tai-btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => sendClaim('Claim')}
-                disabled={submitting || !overview?.allRoundsUnlocked}
+                disabled={
+                  submitting
+                  || !overview?.allRoundsUnlocked
+                  || !userState?.hasStake
+                  || (userState?.claimableTotalTai || 0) <= 0
+                }
               >
                 {isZh ? '一键领取' : 'Claim All'}
               </button>
