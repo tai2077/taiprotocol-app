@@ -24,6 +24,68 @@ export interface InviteLeaderboardEntry {
   totalRewardsTai: string;
 }
 
+export interface InviteTeamMember {
+  level: 1 | 2;
+  address: string;
+  displayAddress: string;
+  inviterAddress?: string;
+  inviterDisplayAddress?: string;
+  status: 'activated' | 'pending';
+  tier: number | null;
+  rewardAmountNano: string;
+  rewardTai: string;
+  rewardClaimed: boolean;
+  createdAt: string | null;
+  subInviteesCount: number;
+}
+
+export interface InviteTeamResponse {
+  depth: 1 | 2;
+  directInvitees: InviteTeamMember[];
+  indirectInvitees: InviteTeamMember[];
+  stats: {
+    directCount: number;
+    indirectCount: number;
+    activatedDirectCount: number;
+    activatedIndirectCount: number;
+    totalRewardsNano: string;
+    totalRewardsTai: string;
+  };
+}
+
+export interface InviteSourceResponse {
+  walletAddress: string;
+  inviter: {
+    address: string;
+    displayAddress: string;
+    inviteCode: string | null;
+    teamSize: number;
+    totalRewardsNano: string;
+    totalRewardsTai: string;
+  } | null;
+  source: string | null;
+  boundAt: string | null;
+}
+
+export interface InviteMapPoint {
+  address: string;
+  displayAddress: string;
+  x: number;
+  y: number;
+  level: 1 | 2;
+  recent: boolean;
+  activated: boolean;
+  tier: number | null;
+}
+
+export interface InviteMapResponse {
+  width: number;
+  height: number;
+  totalLit: number;
+  coverage: number;
+  litPoints: InviteMapPoint[];
+}
+
 export interface ClaimableResponse {
   pendingTotalTai: string;
   unlockedTai: string;
@@ -64,6 +126,32 @@ export interface SaleV2ClaimTaskRewardResponse {
     claimable?: string;
     finalRatioBp?: number;
   };
+}
+
+export interface InviteClaimResponse {
+  amount: string;
+  nonce: string;
+  deadline: number;
+  signature: string;
+  baseAmount?: string;
+  inviteCount?: number;
+  multiplierBp?: number;
+  lockedCount?: number;
+  ruleVersion?: string;
+}
+
+export interface MarketingClaimResponse {
+  success?: boolean;
+  data?: {
+    amount?: string;
+    nonce?: string;
+    deadline?: number;
+    signature?: string;
+  };
+  amount?: string;
+  nonce?: string;
+  deadline?: number;
+  signature?: string;
 }
 
 export interface MissionProgressResponse {
@@ -152,7 +240,37 @@ export interface DepositGoalsResponse {
   next_goal_id: string;
   scanned: number;
   max_scan: number;
+  include_claimed?: boolean;
+  ladder?: {
+    fixed_targets_usd: number[];
+    completed_targets_usd: number[];
+    next_required_usd: number | null;
+    custom_unlocked: boolean;
+  };
   goals: DepositGoalChainItem[];
+}
+
+export interface DepositCheckinResponse {
+  wallet_address: string;
+  today: string;
+  checked_in_today: boolean;
+  already_checked_in_today?: boolean;
+  can_checkin_today: boolean;
+  streak_days: number;
+  total_days: number;
+  last_checkin_date: string | null;
+  reason?: string | null;
+  observed_total_deposited_nano?: string | null;
+  delta_nano?: string | null;
+  has_new_onchain_deposit_today?: boolean | null;
+  created_goals_today?: number | null;
+  source?: string | null;
+}
+
+export interface InviteCodeLookupResponse {
+  valid: boolean;
+  code: string;
+  inviterAddress?: string;
 }
 
 export interface PortfolioResponse {
@@ -162,6 +280,89 @@ export interface PortfolioResponse {
   totalClaimed?: string;
   claimableCount?: number;
   lockedCount?: number;
+}
+
+export interface GrowthStartBindResponse {
+  success: boolean;
+  walletAddress: string;
+  bindToken: string;
+  expiresInSec: number;
+  minMembers: number;
+  deepLink: string;
+  helpUrl?: string;
+}
+
+export interface GrowthTelegramGroup {
+  id: string;
+  chat_id: number;
+  chat_username?: string | null;
+  chat_title?: string | null;
+  owner_wallet: string;
+  member_count: number;
+  active_count_24h: number;
+  group_level: 'seed' | 'growth' | 'active' | 'elite' | 'legend';
+  reward_multiplier: number;
+  verified_at?: string | null;
+  last_sync_at?: string | null;
+}
+
+export interface GrowthTask {
+  id: string;
+  task_key: string;
+  task_type: 'daily' | 'growth' | 'viral' | 'campaign';
+  title_zh: string;
+  title_en: string;
+  reward_tai: string;
+  cooldown_hours: number | null;
+  requirements: Record<string, unknown>;
+  is_active: boolean;
+}
+
+export interface GrowthTaskProgress {
+  taskKey: string;
+  done: boolean;
+  progress: number;
+  target: number | null;
+}
+
+export interface GrowthEarningsSummary {
+  totalTai: string;
+  thisWeekTai: string;
+  claimableTai: string;
+  claimedTai: string;
+}
+
+export interface GrowthEarningItem {
+  id: string;
+  wallet_address: string;
+  group_id?: string | null;
+  source_type: string;
+  source_id?: string | null;
+  amount_tai: string;
+  description?: string | null;
+  metadata?: Record<string, unknown>;
+  claimed: boolean;
+  claimed_at?: string | null;
+  created_at: string;
+}
+
+export interface GrowthEarningsListResponse {
+  earnings: GrowthEarningItem[];
+  page: number;
+  limit: number;
+  total: number;
+}
+
+export interface GrowthClaimResponse {
+  success: boolean;
+  walletAddress: string;
+  claimedTai: string;
+  claimBatchId: string;
+  mode: 'ledger_only';
+  withdraw: {
+    status: string;
+    gas: string;
+  };
 }
 
 function normalizeBase(base: string): string {
@@ -351,6 +552,165 @@ function normalizeInviteLeaderboardResponse(rawResponse: unknown): InviteLeaderb
   });
 }
 
+function shortAddress(address: string, left = 6, right = 4): string {
+  const text = String(address || '').trim();
+  if (!text) return '';
+  if (text.length <= left + right) return text;
+  return `${text.slice(0, left)}...${text.slice(-right)}`;
+}
+
+function normalizeInviteTeamMember(rawMember: unknown, level: 1 | 2): InviteTeamMember {
+  const item = toObject(rawMember);
+  const address = String(item.address || item.invitee_address || item.inviteeAddress || '');
+  const rewardAmountNano = String(item.rewardAmountNano ?? item.reward_amount ?? item.rewardAmount ?? 0);
+  const rewardTai = item.rewardTai != null ? String(item.rewardTai) : nanoToTai(rewardAmountNano);
+  const statusRaw = String(item.status || '').toLowerCase();
+  const status: 'activated' | 'pending' =
+    statusRaw === 'activated' || Boolean(item.hasPurchased || item.purchase_completed) ? 'activated' : 'pending';
+  const tierValue = item.tier ?? item.first_purchase_tier;
+  const tier = tierValue != null ? toNumber(tierValue, 0) || null : null;
+
+  return {
+    level,
+    address,
+    displayAddress: String(item.displayAddress || item.addressMasked || shortAddress(address)),
+    inviterAddress: level === 2 ? String(item.inviterAddress || item.inviter_address || '') || undefined : undefined,
+    inviterDisplayAddress:
+      level === 2
+        ? String(item.inviterDisplayAddress || item.inviter_address_masked || shortAddress(String(item.inviterAddress || item.inviter_address || ''))) ||
+          undefined
+        : undefined,
+    status,
+    tier,
+    rewardAmountNano,
+    rewardTai,
+    rewardClaimed: Boolean(item.rewardClaimed ?? item.reward_claimed),
+    createdAt: item.createdAt || item.joinedAt || item.created_at || null,
+    subInviteesCount: toNumber(item.subInviteesCount ?? item.childrenCount, 0),
+  };
+}
+
+function normalizeInviteTeamResponse(rawResponse: unknown): InviteTeamResponse {
+  const root = toObject(rawResponse);
+
+  // Legacy shape fallback: /invite/invitees/:address
+  if (Array.isArray(root.invitees)) {
+    const directInvitees = root.invitees.map((item: unknown) => normalizeInviteTeamMember(item, 1));
+    const directCount = directInvitees.length;
+    const activatedDirectCount = directInvitees.filter((item) => item.status === 'activated').length;
+    const totalRewardsNano = directInvitees.reduce((sum, item) => {
+      try {
+        return sum + BigInt(item.rewardAmountNano || '0');
+      } catch {
+        return sum;
+      }
+    }, 0n);
+    return {
+      depth: 1,
+      directInvitees,
+      indirectInvitees: [],
+      stats: {
+        directCount,
+        indirectCount: 0,
+        activatedDirectCount,
+        activatedIndirectCount: 0,
+        totalRewardsNano: totalRewardsNano.toString(),
+        totalRewardsTai: nanoToTai(totalRewardsNano.toString()),
+      },
+    };
+  }
+
+  const directInvitees = Array.isArray(root.directInvitees)
+    ? root.directInvitees.map((item: unknown) => normalizeInviteTeamMember(item, 1))
+    : [];
+  const indirectInvitees = Array.isArray(root.indirectInvitees)
+    ? root.indirectInvitees.map((item: unknown) => normalizeInviteTeamMember(item, 2))
+    : [];
+
+  const statsRaw = toObject(root.stats);
+  const totalRewardsNano =
+    statsRaw.totalRewardsNano != null
+      ? String(statsRaw.totalRewardsNano)
+      : [...directInvitees, ...indirectInvitees].reduce((sum, item) => {
+          try {
+            return sum + BigInt(item.rewardAmountNano || '0');
+          } catch {
+            return sum;
+          }
+        }, 0n).toString();
+
+  return {
+    depth: toNumber(root.depth, 2) <= 1 ? 1 : 2,
+    directInvitees,
+    indirectInvitees,
+    stats: {
+      directCount: toNumber(statsRaw.directCount, directInvitees.length),
+      indirectCount: toNumber(statsRaw.indirectCount, indirectInvitees.length),
+      activatedDirectCount: toNumber(
+        statsRaw.activatedDirectCount,
+        directInvitees.filter((item) => item.status === 'activated').length
+      ),
+      activatedIndirectCount: toNumber(
+        statsRaw.activatedIndirectCount,
+        indirectInvitees.filter((item) => item.status === 'activated').length
+      ),
+      totalRewardsNano,
+      totalRewardsTai: statsRaw.totalRewardsTai != null ? String(statsRaw.totalRewardsTai) : nanoToTai(totalRewardsNano),
+    },
+  };
+}
+
+function normalizeInviteSourceResponse(rawResponse: unknown, walletAddress: string): InviteSourceResponse {
+  const root = toObject(rawResponse);
+  const inviterRaw = root.inviter ? toObject(root.inviter) : null;
+  const address = inviterRaw ? String(inviterRaw.address || inviterRaw.inviterAddress || '') : '';
+  return {
+    walletAddress: String(root.walletAddress || walletAddress || ''),
+    inviter: inviterRaw && address
+      ? {
+          address,
+          displayAddress: String(inviterRaw.displayAddress || shortAddress(address)),
+          inviteCode: inviterRaw.inviteCode != null ? String(inviterRaw.inviteCode) : null,
+          teamSize: toNumber(inviterRaw.teamSize, 0),
+          totalRewardsNano: String(inviterRaw.totalRewardsNano ?? '0'),
+          totalRewardsTai: inviterRaw.totalRewardsTai != null ? String(inviterRaw.totalRewardsTai) : nanoToTai(inviterRaw.totalRewardsNano ?? '0'),
+        }
+      : null,
+    source: root.source != null ? String(root.source) : null,
+    boundAt: root.boundAt != null ? String(root.boundAt) : null,
+  };
+}
+
+function normalizeInviteMapResponse(rawResponse: unknown): InviteMapResponse {
+  const root = toObject(rawResponse);
+  const width = Math.max(20, toNumber(root.width, 58));
+  const height = Math.max(10, toNumber(root.height, 26));
+  const rows = Array.isArray(root.litPoints) ? root.litPoints : [];
+  const litPoints = rows.map((row: unknown): InviteMapPoint => {
+    const item = toObject(row);
+    const address = String(item.address || '');
+    return {
+      address,
+      displayAddress: String(item.displayAddress || shortAddress(address)),
+      x: toNumber(item.x, 0),
+      y: toNumber(item.y, 0),
+      level: toNumber(item.level, 1) === 2 ? 2 : 1,
+      recent: Boolean(item.recent),
+      activated: Boolean(item.activated ?? item.status === 'activated'),
+      tier: item.tier != null ? toNumber(item.tier, 0) || null : null,
+    };
+  });
+
+  const coverage = toNumber(root.coverage, 0);
+  return {
+    width,
+    height,
+    totalLit: toNumber(root.totalLit, litPoints.length),
+    coverage,
+    litPoints,
+  };
+}
+
 function normalizeClaimableResponse(rawResponse: unknown): ClaimableResponse {
   const root = toObject(rawResponse);
   const raw = toObject(root.data || root);
@@ -526,6 +886,48 @@ export const api = {
       () => requestJson<any>(['/api/sale-v2/invite/leaderboard', '/sale-v2/invite/leaderboard']).then(normalizeInviteLeaderboardResponse),
       () => requestJson<any>('/api/referral/leaderboard').then(normalizeInviteLeaderboardResponse),
     ]),
+  getInviteTeam: (address: string, depth: 1 | 2 = 2) =>
+    requestWithFallback<InviteTeamResponse>([
+      () =>
+        requestJson<any>([
+          `/api/sale-v2/invite/team/${address}?depth=${depth}`,
+          `/sale-v2/invite/team/${address}?depth=${depth}`,
+        ]).then((data) => normalizeInviteTeamResponse(data)),
+      () =>
+        requestJson<any>([
+          `/api/sale-v2/invite/invitees/${address}`,
+          `/sale-v2/invite/invitees/${address}`,
+        ]).then((data) => normalizeInviteTeamResponse(data)),
+    ]),
+  getInviteSource: (address: string) =>
+    requestWithFallback<InviteSourceResponse>([
+      () =>
+        requestJson<any>([`/api/sale-v2/invite/source/${address}`, `/sale-v2/invite/source/${address}`]).then((data) =>
+          normalizeInviteSourceResponse(data, address)
+        ),
+      async () =>
+        ({
+          walletAddress: address,
+          inviter: null,
+          source: null,
+          boundAt: null,
+        } as InviteSourceResponse),
+    ]),
+  getInviteMap: (address: string) =>
+    requestWithFallback<InviteMapResponse>([
+      () =>
+        requestJson<any>([`/api/sale-v2/invite/map/${address}`, `/sale-v2/invite/map/${address}`]).then((data) =>
+          normalizeInviteMapResponse(data)
+        ),
+      () =>
+        api.getInviteTeam(address, 2).then((team) => ({
+          width: 58,
+          height: 26,
+          totalLit: team.stats.directCount + team.stats.indirectCount,
+          coverage: 0,
+          litPoints: [],
+        })),
+    ]),
   getRecentPurchases: async () => {
     try {
       const data = await requestJson<any>(['/api/sale-v2/recent-purchases', '/sale-v2/recent-purchases']);
@@ -628,16 +1030,32 @@ export const api = {
       headers: { Authorization: tonProofHeader },
       body: JSON.stringify(body),
     }),
-  claimInvite: (body: { walletAddress: string }) =>
-    requestJson<any>(['/api/sale-v2/invite/claim', '/sale-v2/invite/claim'], { method: 'POST', body: JSON.stringify(body) }),
-  claimMarketing: (body: { wallet_address: string }) =>
-    requestJson<any>(['/api/marketing/claim', '/marketing/claim'], { method: 'POST', body: JSON.stringify(body) }),
+  claimInvite: (body: { walletAddress: string }, tonProofHeader?: string) =>
+    requestJson<InviteClaimResponse>(['/api/sale-v2/invite/claim', '/sale-v2/invite/claim'], {
+      method: 'POST',
+      headers: tonProofHeader ? { Authorization: tonProofHeader } : undefined,
+      body: JSON.stringify(body),
+    }),
+  claimMarketing: (body: { wallet_address: string }, tonProofHeader?: string) =>
+    requestJson<MarketingClaimResponse>(['/api/marketing/claim', '/marketing/claim'], {
+      method: 'POST',
+      headers: tonProofHeader ? { Authorization: tonProofHeader } : undefined,
+      body: JSON.stringify(body),
+    }),
   claimSaleV2TaskReward: (body: { walletAddress: string }, tonProofHeader: string) =>
     requestJson<SaleV2ClaimTaskRewardResponse>(['/api/sale-v2/claim-task-reward', '/sale-v2/claim-task-reward'], {
       method: 'POST',
       headers: { Authorization: tonProofHeader },
       body: JSON.stringify(body),
     }),
+  lookupInviteCode: async (code: string) => {
+    const data = await requestJson<any>([`/api/sale-v2/invite/code/${encodeURIComponent(code)}`, `/sale-v2/invite/code/${encodeURIComponent(code)}`]);
+    return {
+      valid: true,
+      code: String(data?.code || code).toUpperCase(),
+      inviterAddress: data?.inviterAddress ? String(data.inviterAddress) : undefined,
+    } as InviteCodeLookupResponse;
+  },
   getPrice: () => requestJson<any>(['/price', '/api/price']),
   buildDepositCreateTx: (body: { wallet_address: string; target_usd_nano: string; amount_nano: string }) =>
     requestJson<DepositTxResponse>(['/api/deposit/tx/create', '/deposit/tx/create'], {
@@ -654,6 +1072,57 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(body),
     }),
-  getDepositGoals: (address: string) =>
-    requestJson<DepositGoalsResponse>([`/api/deposit/goals/${address}`, `/deposit/goals/${address}`]),
+  getDepositCheckin: (address: string) =>
+    requestJson<DepositCheckinResponse>([`/api/deposit/checkin/${address}`, `/deposit/checkin/${address}`]),
+  checkinDeposit: (body: {
+    wallet_address: string;
+    source?: 'create' | 'topup' | 'deposit';
+    max_scan?: number;
+  }) =>
+    requestJson<DepositCheckinResponse>(['/api/deposit/checkin', '/deposit/checkin'], {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  getDepositGoals: (address: string, options?: { includeClaimed?: boolean; maxScan?: number }) => {
+    const params = new URLSearchParams();
+    if (options?.includeClaimed) params.set('include_claimed', '1');
+    if (options?.maxScan) params.set('max_scan', String(options.maxScan));
+    const query = params.toString();
+    const suffix = query ? `?${query}` : '';
+    return requestJson<DepositGoalsResponse>([`/api/deposit/goals/${address}${suffix}`, `/deposit/goals/${address}${suffix}`]);
+  },
+  growthStartBind: (body: { walletAddress: string }, tonProofHeader: string) =>
+    requestJson<GrowthStartBindResponse>(['/api/growth/groups/start-bind', '/growth/groups/start-bind'], {
+      method: 'POST',
+      headers: { Authorization: tonProofHeader },
+      body: JSON.stringify(body),
+    }),
+  getGrowthGroups: (address: string) =>
+    requestJson<{ groups: GrowthTelegramGroup[] }>([
+      `/api/growth/groups/mine/${address}`,
+      `/growth/groups/mine/${address}`,
+    ]).then((res) => res?.groups || []),
+  getGrowthTasks: () =>
+    requestJson<{ tasks: GrowthTask[] }>(['/api/growth/tasks', '/growth/tasks']).then((res) => res?.tasks || []),
+  getGrowthTaskProgress: (address: string) =>
+    requestJson<{ progress: GrowthTaskProgress[] }>([
+      `/api/growth/tasks/progress/${address}`,
+      `/growth/tasks/progress/${address}`,
+    ]).then((res) => res?.progress || []),
+  getGrowthEarningsSummary: (address: string) =>
+    requestJson<GrowthEarningsSummary>([
+      `/api/growth/earnings/summary/${address}`,
+      `/growth/earnings/summary/${address}`,
+    ]),
+  getGrowthEarnings: (address: string, page = 1, limit = 20) =>
+    requestJson<GrowthEarningsListResponse>([
+      `/api/growth/earnings/${address}?page=${page}&limit=${limit}`,
+      `/growth/earnings/${address}?page=${page}&limit=${limit}`,
+    ]),
+  claimGrowthEarnings: (body: { walletAddress: string }, tonProofHeader: string) =>
+    requestJson<GrowthClaimResponse>(['/api/growth/earnings/claim', '/growth/earnings/claim'], {
+      method: 'POST',
+      headers: { Authorization: tonProofHeader },
+      body: JSON.stringify(body),
+    }),
 };
