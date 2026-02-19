@@ -17,6 +17,16 @@
 
 ---
 
+## 0. 主网安全红线（强制）
+
+- 未经业务负责人**明确授权**，禁止在主网执行任何 Oracle 推送、价格写入、解锁相关操作。
+- 涉及上述操作时，必须满足以下三项：
+  - 有书面授权（聊天记录/工单均可）
+  - 在指定执行窗口内操作
+  - 操作后立即复核链上与接口状态，并记录结果
+
+---
+
 ## 1. 上线基础配置
 
 | # | 检查项 | 状态 | 负责人 | 结果/证据 |
@@ -115,7 +125,7 @@
 | 6.6 | `/profile` 可访问 | ✅ | | Profile 页面 |
 | 6.7 | `/sale` 可访问 | ✅ | | Shop 页面 |
 | 6.8 | `/missions` 可访问 | ✅ | | Missions 页面 |
-| 6.9 | `/achievements` 可访问 | ✅ | | **已修复** - Dashboard 与 Profile 均可进入 |
+| 6.9 | `/achievements` 可访问 | N/A | | **按最新产品决策已下线** |
 | 6.10 | `/onboarding` 可访问 | N/A | | **按需求移除** - 已从 `App.tsx` 路由中删除，引导页不再对外开放 |
 | 6.11 | 无死链 | ✅ | | 所有 Link 目标已注册 |
 | 6.12 | 无 404 | ✅ | | `*` 通配符兜底重定向 |
@@ -275,7 +285,7 @@
 |---|------|------|---------|
 | 1 | early-buyer 签名端点无 TON Proof | backend/early-buyer-rewards.ts | ✅ 已修复：强制 TON Proof + 地址一致性校验 |
 | 2 | 内存限流有局限 | backend/sale-v2.ts | ✅ 已修复：KV 分布式限流 + 内存兜底 |
-| 3 | Achievements 孤岛页面 | app-tai | ✅ 已修复：Dashboard/Profile 已加入口 |
+| 3 | Achievements 孤岛页面 | app-tai | N/A：功能已整体下线 |
 | 4 | 缺少 safe-area 适配 | app-tai/index.html | ✅ 已修复：viewport-fit + safe-area inset |
 | 5 | 合约测试覆盖率低 | contracts/tests | ✅ 已修复：全量测试通过且覆盖率达阈值 |
 

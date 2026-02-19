@@ -1,6 +1,14 @@
-# TAI Protocol App (app-tai)
+# 财富学院 (app-tai)
 
 Production-ready Telegram Mini App frontend with Neo-Brutalist UI.
+
+## Mainnet Safety Rule (Hard Gate)
+
+- 未经业务负责人**明确授权**，禁止在主网执行任何：
+  - Oracle 推送
+  - 价格写入
+  - 解锁相关操作
+- 所有上述操作必须走“人工确认 -> 指定窗口执行 -> 执行后复核”流程，并保留操作记录。
 
 ## What is implemented
 
@@ -11,7 +19,7 @@ Production-ready Telegram Mini App frontend with Neo-Brutalist UI.
 - Invite link + invite stats
 - Rewards center + claim tx entry
 - Leaderboard (invite ranking)
-- Missions / Achievements / Profile
+- Missions / Profile
 - Global runtime safety (error boundary + non-blocking toast feedback)
 - Hardened API client (timeout/retry/base-path fallback)
 

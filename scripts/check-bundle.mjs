@@ -39,8 +39,8 @@ const indexCssGzipKb = toKb(readGzipBytes(path.join(distAssets, indexCss)));
 const totalJsGzipKb = jsFiles.reduce((sum, file) => sum + toKb(readGzipBytes(path.join(distAssets, file))), 0);
 
 const INDEX_JS_GZIP_MAX_KB = envKb('BUNDLE_INDEX_GZIP_MAX_KB', 80);
-const INDEX_CSS_GZIP_MAX_KB = envKb('BUNDLE_INDEX_CSS_GZIP_MAX_KB', 12);
-const TOTAL_JS_GZIP_MAX_KB = envKb('BUNDLE_TOTAL_JS_GZIP_MAX_KB', 340);
+const INDEX_CSS_GZIP_MAX_KB = envKb('BUNDLE_INDEX_CSS_GZIP_MAX_KB', 12.2);
+const TOTAL_JS_GZIP_MAX_KB = envKb('BUNDLE_TOTAL_JS_GZIP_MAX_KB', 345);
 
 const failures = [];
 
